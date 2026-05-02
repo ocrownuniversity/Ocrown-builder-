@@ -1,0 +1,58 @@
+{
+  "name": "BENIM Warehouse",
+  "short_name": "BENIM",
+  "description": "Premium Fashion Store - Shop men, women & kids fashion in Ibadan Nigeria",
+  "start_url": "/Benim_Trade/",
+  "scope": "/Benim_Trade/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a3a8b",
+  "theme_color": "#1a3a8b",
+  "lang": "en",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Men Fashion",
+      "short_name": "Men",
+      "description": "Browse men fashion",
+      "url": "/Benim_Trade/?cat=men",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Women Fashion",
+      "short_name": "Women",
+      "description": "Browse women fashion",
+      "url": "/Benim_Trade/?cat=women",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Kids Fashion",
+      "short_name": "Kids",
+      "description": "Browse kids fashion",
+      "url": "/Benim_Trade/?cat=kids",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    }
+  ]
+}
