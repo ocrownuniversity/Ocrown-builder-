@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ocrown – Website Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+/* ─── RESET & TOKENS ─────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;
+  --surface:#161920;
+  --card:#1e2230;
+  --border:#2a2f3e;
+  --accent:#6ee7b7;
+  --accent2:#38bdf8;
+  --accent3:#f59e0b;
+  --danger:#f87171;
+  --text:#e8eaf0;
+  --muted:#7b8099;
+  --font-head:'Syne',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --radius:12px;
+  --radius-lg:20px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh}
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.2}
+a{color:inherit;text-decoration:none}
+input,textarea,select{font-family:var(--font-body);font-size:14px}
+button{font-family:var(--font-body);cursor:pointer;border:none;outline:none}
+img{max-width:100%}
+
+/* ─── UTILITIES ─────────────────────────────────────────────────── */
+.hidden{display:none!important}
+.flex{display:flex}
+.flex-col{flex-direction:column}
+.items-center{align-items:center}
+.justify-between{justify-content:space-between}
+.gap-2{gap:.5rem}.gap-3{gap:.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}
+.mt-2{margin-top:.5rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.mt-8{margin-top:2rem}
+.mb-2{margin-bottom:.5rem}.mb-4{margin-bottom:1rem}
+.w-full{width:100%}
+.text-sm{font-size:13px}.text-xs{font-size:11px}
+.text-muted{color:var(--muted)}
+.text-accent{color:var(--accent)}
+.text-danger{color:var(--danger)}
+.fw-600{font-weight:600}.fw-700{font-weight:700}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+@media(max-width:768px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+  .hide-mobile{display:none!important}
+}
+
+/* ─── SCROLLBAR ─────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+/* ─── COMPONENTS ─────────────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1.2rem;border-radius:8px;font-size:13.5px;font-weight:500;transition:all .2s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#0d0f14}
+.btn-primary:hover{background:#a7f3d0;transform:translateY(-1px)}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(248,113,113,.15);color:var(--danger);border:1px solid rgba(248,113,113,.3)}
+.btn-danger:hover{background:rgba(248,113,113,.25)}
+.btn-ghost{background:transparent;color:var(--muted)}
+.btn-ghost:hover{color:var(--text)}
+.btn-sm{padding:.35rem .8rem;font-size:12px}
+.btn-lg{padding:.8rem 1.8rem;font-size:15px}
+.btn-block{width:100%;justify-content:center}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.form-group label{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.form-control{background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:.65rem .85rem;border-radius:8px;width:100%;transition:border-color .2s;outline:none}
+.form-control:focus{border-color:var(--accent)}
+.form-control::placeholder{color:var(--muted)}
+textarea.form-control{resize:vertical;min-height:90px}
+select.form-control{appearance:none;cursor:pointer}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.card-lg{padding:2rem}
+
+.badge{display:inline-flex;align-items:center;padding:.2rem .55rem;border-radius:99px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.badge-green{background:rgba(110,231,183,.15);color:var(--accent)}
+.badge-blue{background:rgba(56,189,248,.15);color:var(--accent2)}
+.badge-amber{background:rgba(245,158,11,.15);color:var(--accent3)}
+.badge-red{background:rgba(248,113,113,.15);color:var(--danger)}
+
+.toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem}
+.toast{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.75rem 1.1rem;font-size:13.5px;max-width:320px;box-shadow:var(--shadow);animation:toastIn .3s ease}
+.toast.success{border-color:var(--accent);color:var(--accent)}
+.toast.error{border-color:var(--danger);color:var(--danger)}
+.toast.info{border-color:var(--accent2);color:var(--accent2)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px)}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.modal-title{font-size:1.2rem;font-weight:700}
+
+/* ─── LANDING PAGE ─────────────────────────────────────────────── */
+#page-landing{min-height:100vh;display:flex;flex-direction:column}
+.landing-nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 3rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(13,15,20,.9);backdrop-filter:blur(12px);z-index:100}
+.logo{font-family:var(--font-head);font-size:1.4rem;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+.logo span{color:var(--text)}
+
+.landing-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5rem 2rem 4rem;position:relative;overflow:hidden}
+.landing-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(110,231,183,.08) 0%,transparent 70%);pointer-events:none}
+.hero-tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(110,231,183,.08);border:1px solid rgba(110,231,183,.2);color:var(--accent);padding:.3rem .9rem;border-radius:99px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.5rem}
+.hero-title{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:800;line-height:1.1;max-width:760px;margin-bottom:1.25rem}
+.hero-title em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{color:var(--muted);font-size:1.05rem;max-width:520px;margin-bottom:2.5rem}
+.hero-cta{display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center}
+
+.landing-features{padding:5rem 3rem;max-width:1100px;margin:0 auto;width:100%}
+.section-label{text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:.75rem}
+.section-title{text-align:center;font-size:clamp(1.6rem,3vw,2.4rem);font-weight:800;margin-bottom:3rem}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;transition:border-color .2s,transform .2s}
+.feature-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+.feature-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:1rem}
+.feature-card h3{font-size:1rem;font-weight:700;margin-bottom:.4rem}
+.feature-card p{color:var(--muted);font-size:13.5px;line-height:1.6}
+
+.landing-templates{padding:4rem 3rem;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.template-showcase{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem;max-width:1000px;margin:0 auto}
+.template-thumb{border-radius:var(--radius-lg);overflow:hidden;border:2px solid var(--border);transition:border-color .2s,transform .2s;cursor:pointer}
+.template-thumb:hover{border-color:var(--accent);transform:translateY(-4px)}
+.template-preview{height:140px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative;overflow:hidden}
+.t-school{background:linear-gradient(135deg,#1a3a5c,#0d1f33)}
+.t-business{background:linear-gradient(135deg,#1a2a1a,#0d200d)}
+.t-store{background:linear-gradient(135deg,#3a1a2a,#200d15)}
+.t-portfolio{background:linear-gradient(135deg,#2a1a3a,#180d20)}
+.template-info{padding:.85rem 1rem;background:var(--card)}
+.template-info h4{font-size:.9rem;font-weight:700;margin-bottom:.2rem}
+.template-info p{font-size:12px;color:var(--muted)}
+
+.landing-footer{text-align:center;padding:2rem;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+
+/* ─── AUTH PAGES ─────────────────────────────────────────────────── */
+#page-auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--bg)}
+.auth-card{width:100%;max-width:420px}
+.auth-logo{text-align:center;margin-bottom:2rem}
+.auth-logo .logo{font-size:1.8rem}
+.auth-card h2{font-size:1.4rem;font-weight:800;margin-bottom:.3rem}
+.auth-card .auth-sub{color:var(--muted);font-size:13.5px;margin-bottom:1.75rem}
+.auth-divider{text-align:center;color:var(--muted);font-size:12px;margin:1rem 0;position:relative}
+.auth-divider::before{content:'';position:absolute;left:0;top:50%;height:1px;width:calc(50% - 24px);background:var(--border)}
+.auth-divider::after{content:'';position:absolute;right:0;top:50%;height:1px;width:calc(50% - 24px);background:var(--border)}
+.auth-switch{text-align:center;color:var(--muted);font-size:13.5px;margin-top:1.25rem}
+.auth-switch button{background:none;border:none;color:var(--accent);font-size:13.5px;cursor:pointer;font-family:var(--font-body);text-decoration:underline}
+
+/* ─── DASHBOARD ─────────────────────────────────────────────────── */
+#page-dashboard{min-height:100vh;display:flex;flex-direction:column}
+.dash-nav{display:flex;align-items:center;justify-content:space-between;padding:.9rem 2rem;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.dash-nav-left{display:flex;align-items:center;gap:1rem}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#0d0f14}
+.dash-body{display:flex;flex:1}
+.dash-sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;flex-shrink:0;display:flex;flex-direction:column;gap:.3rem}
+.dash-sidebar a,.dash-sidebar button{display:flex;align-items:center;gap:.65rem;padding:.6rem .85rem;border-radius:8px;color:var(--muted);font-size:13.5px;background:transparent;border:none;width:100%;text-align:left;cursor:pointer;transition:all .15s;font-family:var(--font-body)}
+.dash-sidebar a:hover,.dash-sidebar button:hover,.dash-sidebar a.active,.dash-sidebar button.active{background:rgba(110,231,183,.08);color:var(--accent)}
+.sidebar-spacer{flex:1}
+.dash-main{flex:1;padding:2rem;overflow-y:auto}
+.dash-header{margin-bottom:2rem}
+.dash-header h1{font-size:1.6rem;font-weight:800}
+.dash-header p{color:var(--muted);font-size:13.5px;margin-top:.25rem}
+
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.stat-number{font-size:2rem;font-weight:800;font-family:var(--font-head)}
+.stat-label{color:var(--muted);font-size:12.5px;margin-top:.25rem}
+
+.website-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:border-color .2s}
+.website-card:hover{border-color:var(--border)}
+.website-card-thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:2rem;position:relative}
+.website-card-body{padding:1rem}
+.website-card-body h3{font-size:.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.website-card-body p{font-size:12px;color:var(--muted);margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.website-card-actions{display:flex;gap:.4rem;margin-top:.75rem;flex-wrap:wrap}
+
+/* ─── BUILDER ─────────────────────────────────────────────────── */
+#page-builder{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.builder-nav{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);gap:1rem}
+.builder-nav-left{display:flex;align-items:center;gap:.75rem;flex:1;min-width:0}
+.builder-title-input{background:transparent;border:1.5px solid transparent;color:var(--text);font-family:var(--font-head);font-size:1rem;font-weight:700;padding:.3rem .5rem;border-radius:6px;flex:1;min-width:0}
+.builder-title-input:focus{border-color:var(--accent);background:var(--card);outline:none}
+.builder-body{display:flex;flex:1;overflow:hidden}
+.builder-panel{width:300px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0}
+.builder-panel-tabs{display:flex;border-bottom:1px solid var(--border)}
+.panel-tab{flex:1;padding:.75rem;text-align:center;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;background:transparent;border:none;font-family:var(--font-body);border-bottom:2px solid transparent;margin-bottom:-1px}
+.panel-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel-content{padding:1rem;display:none}
+.panel-content.active{display:block}
+
+.section-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.85rem;margin-bottom:.6rem;cursor:pointer;transition:border-color .15s}
+.section-item:hover{border-color:var(--accent)}
+.section-item.active{border-color:var(--accent);background:rgba(110,231,183,.05)}
+.section-item-header{display:flex;align-items:center;justify-content:space-between}
+.section-item-title{font-size:13px;font-weight:600}
+.section-item-type{font-size:11px;color:var(--muted)}
+.section-remove{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 .2rem;transition:color .15s}
+.section-remove:hover{color:var(--danger)}
+
+.builder-preview{flex:1;background:#111318;overflow-y:auto;position:relative}
+.preview-wrapper{min-height:100%;padding:0}
+.preview-toolbar{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);padding:.5rem 1rem;display:flex;align-items:center;justify-content:space-between;z-index:10}
+.preview-sizes{display:flex;gap:.3rem}
+.preview-size-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:.3rem .7rem;border-radius:6px;font-size:12px;cursor:pointer;transition:all .15s}
+.preview-size-btn.active{border-color:var(--accent);color:var(--accent)}
+.preview-frame{width:100%;min-height:calc(100vh - 48px);border:none;background:#fff}
+.preview-frame.tablet{max-width:768px;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+.preview-frame.mobile{max-width:375px;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+
+/* ─── PUBLISH VIEW ─────────────────────────────────────────────── */
+#page-published{min-height:100vh;background:var(--bg);padding:2rem}
+.publish-container{max-width:640px;margin:4rem auto;text-align:center}
+.publish-icon{font-size:4rem;margin-bottom:1rem}
+.publish-container h1{font-size:2rem;font-weight:800;margin-bottom:.5rem}
+.publish-container p{color:var(--muted);margin-bottom:1.5rem}
+.publish-url-box{background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:.75rem;text-align:left;margin-bottom:1.5rem}
+.publish-url-box .url-text{flex:1;font-size:13.5px;word-break:break-all;color:var(--accent)}
+
+/* ─── LIVE SITE VIEWER ─────────────────────────────────────────── */
+#page-live{min-height:100vh;background:#fff;color:#111}
+
+/* ─── TEMPLATE RENDERED STYLES (injected into preview iframe) ─── */
+/* These are used when generating the actual site HTML */
+
+/* ─── MEDIA ─────────────────────────────────────────────────────── */
+@media(max-width:768px){
+  .landing-nav{padding:.9rem 1.25rem}
+  .landing-features{padding:3rem 1.25rem}
+  .dash-sidebar{display:none}
+  .dash-main{padding:1.25rem}
+  .builder-panel{display:none}
+  .builder-body{flex-direction:column}
+}
+
+/* ─── LOADING ─────────────────────────────────────────────────────── */
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.page-loader{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:1rem}
+.page-loader .spinner{width:36px;height:36px;border-width:3px}
+
+/* ─── DOMAIN INSTRUCTIONS ────────────────────────────────────────── */
+.dns-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.dns-table th,.dns-table td{padding:.55rem .75rem;border:1px solid var(--border);text-align:left}
+.dns-table th{background:var(--card);color:var(--muted);font-weight:600}
+.dns-table code{background:var(--bg);padding:.15rem .4rem;border-radius:4px;font-size:11px;font-family:monospace}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ TOAST CONTAINER ════════════════════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ═══════════════════ PAGE: LOADING ══════════════════════════════ -->
+<div id="page-loading" class="page-loader">
+  <div class="spinner"></div>
+  <span style="color:var(--muted);font-size:13px">Loading Ocrown…</span>
+</div>
+
+<!-- ═══════════════════ PAGE: LANDING ══════════════════════════════ -->
+<div id="page-landing" class="hidden">
+  <nav class="landing-nav">
+    <div class="logo">Ocrown<span>.</span></div>
+    <div class="flex gap-3">
+      <button class="btn btn-ghost" onclick="showAuth('login')">Log in</button>
+      <button class="btn btn-primary" onclick="showAuth('signup')">Get Started Free</button>
+    </div>
+  </nav>
+
+  <section class="landing-hero">
+    <div class="hero-tag">✦ Build. Publish. Grow.</div>
+    <h1 class="hero-title">Build <em>beautiful websites</em> without writing code</h1>
+    <p class="hero-sub">From schools to e-commerce, portfolios to businesses — Ocrown gives you the tools to launch a professional site in minutes.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary btn-lg" onclick="showAuth('signup')">Start Building Free →</button>
+      <button class="btn btn-secondary btn-lg" onclick="scrollTo({top:document.querySelector('.landing-templates').offsetTop,behavior:'smooth'})">See Templates</button>
+    </div>
+  </section>
+
+  <section class="landing-features">
+    <div class="section-label">Why Ocrown</div>
+    <h2 class="section-title">Everything you need to go online</h2>
+    <div class="grid-4">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(110,231,183,.12)">🏫</div>
+        <h3>School Websites</h3>
+        <p>Admissions, announcements, staff pages — built for educational institutions.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(56,189,248,.12)">🛍️</div>
+        <h3>E-Commerce</h3>
+        <p>Product listings, cart, and Paystack checkout — sell online in minutes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(245,158,11,.12)">🏢</div>
+        <h3>Business Sites</h3>
+        <p>Services, about page, and contact — a complete web presence for your brand.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(167,139,250,.12)">🎨</div>
+        <h3>Portfolios</h3>
+        <p>Showcase your projects and skills with a stunning personal portfolio.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-templates">
+    <div class="section-label">Templates</div>
+    <h2 class="section-title" style="max-width:600px;margin:0 auto 2.5rem">Professional templates for every purpose</h2>
+    <div class="template-showcase">
+      <div class="template-thumb" onclick="showAuth('signup')">
+        <div class="template-preview t-school">🏫</div>
+        <div class="template-info"><h4>School</h4><p>Academic & education</p></div>
+      </div>
+      <div class="template-thumb" onclick="showAuth('signup')">
+        <div class="template-preview t-business">🏢</div>
+        <div class="template-info"><h4>Business</h4><p>Corporate & services</p></div>
+      </div>
+      <div class="template-thumb" onclick="showAuth('signup')">
+        <div class="template-preview t-store">🛒</div>
+        <div class="template-info"><h4>E-Commerce</h4><p>Online store & shop</p></div>
+      </div>
+      <div class="template-thumb" onclick="showAuth('signup')">
+        <div class="template-preview t-portfolio">🎨</div>
+        <div class="template-info"><h4>Portfolio</h4><p>Personal & creative</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="landing-footer">
+    <div class="logo" style="margin-bottom:.5rem">Ocrown<span>.</span></div>
+    <p>© 2025 Ocrown. Build websites that grow with you.</p>
+  </footer>
+</div>
+
+<!-- ═══════════════════ PAGE: AUTH ══════════════════════════════════ -->
+<div id="page-auth" class="hidden">
+  <div class="auth-card card card-lg">
+    <div class="auth-logo"><div class="logo">Ocrown<span>.</span></div></div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <h2>Welcome back</h2>
+      <p class="auth-sub">Sign in to your Ocrown account</p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" class="form-control" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" class="form-control" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg mt-4" id="btn-login" onclick="handleLogin()">
+        Sign In
+      </button>
+      <p class="auth-switch">Don't have an account? <button onclick="toggleAuthForm('signup')">Create one free</button></p>
+      <p class="auth-switch mt-2"><button onclick="showPage('landing')" style="color:var(--muted)">← Back to home</button></p>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="form-signup" class="hidden">
+      <h2>Create your account</h2>
+      <p class="auth-sub">Start building websites for free</p>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="signup-fname" class="form-control" placeholder="Ada"/>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="signup-lname" class="form-control" placeholder="Lovelace"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="signup-username" class="form-control" placeholder="ada-lovelace"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" class="form-control" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" class="form-control" placeholder="Min 6 characters"/>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg mt-4" id="btn-signup" onclick="handleSignup()">
+        Create Account
+      </button>
+      <p class="auth-switch">Already have an account? <button onclick="toggleAuthForm('login')">Sign in</button></p>
+      <p class="auth-switch mt-2"><button onclick="showPage('landing')" style="color:var(--muted)">← Back to home</button></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: DASHBOARD ════════════════════════════ -->
+<div id="page-dashboard" class="hidden">
+  <nav class="dash-nav">
+    <div class="dash-nav-left">
+      <div class="logo" style="font-size:1.2rem">Ocrown<span>.</span></div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="dash-username" class="text-sm text-muted hide-mobile"></span>
+      <div class="user-avatar" id="dash-avatar">U</div>
+      <button class="btn btn-secondary btn-sm" onclick="handleLogout()">Sign out</button>
+    </div>
+  </nav>
+  <div class="dash-body">
+    <aside class="dash-sidebar">
+      <button class="active" onclick="showDashTab('overview')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button onclick="showDashTab('sites')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        My Websites
+      </button>
+      <button onclick="openNewWebsiteModal()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Website
+      </button>
+      <div class="sidebar-spacer"></div>
+      <button onclick="handleLogout()" style="color:var(--danger)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </aside>
+    <main class="dash-main">
+      <!-- OVERVIEW TAB -->
+      <div id="dash-tab-overview">
+        <div class="dash-header">
+          <h1 id="dash-greeting">Good morning 👋</h1>
+          <p>Here's what's happening with your websites</p>
+        </div>
+        <div class="grid-4" style="margin-bottom:2rem">
+          <div class="stat-card">
+            <div class="stat-number text-accent" id="stat-total">0</div>
+            <div class="stat-label">Total Websites</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" style="color:var(--accent2)" id="stat-published">0</div>
+            <div class="stat-label">Published</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" style="color:var(--accent3)" id="stat-drafts">0</div>
+            <div class="stat-label">Drafts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" style="color:#a78bfa" id="stat-domains">0</div>
+            <div class="stat-label">Custom Domains</div>
+          </div>
+        </div>
+        <div class="flex justify-between items-center mb-4">
+          <h2 style="font-size:1.1rem;font-weight:700">Recent Websites</h2>
+          <button class="btn btn-primary btn-sm" onclick="openNewWebsiteModal()">+ New Website</button>
+        </div>
+        <div id="dash-recent-sites" class="grid-3">
+          <div class="card" style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)">
+            <div style="font-size:2rem;margin-bottom:.75rem">🌐</div>
+            <p style="margin-bottom:1rem">No websites yet. Create your first one!</p>
+            <button class="btn btn-primary" onclick="openNewWebsiteModal()">+ Create Website</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SITES TAB -->
+      <div id="dash-tab-sites" class="hidden">
+        <div class="dash-header">
+          <h1>My Websites</h1>
+          <p>Manage all your websites in one place</p>
+        </div>
+        <div class="flex justify-between items-center mb-4">
+          <span id="sites-count" class="text-muted text-sm">0 websites</span>
+          <button class="btn btn-primary btn-sm" onclick="openNewWebsiteModal()">+ New Website</button>
+        </div>
+        <div id="dash-all-sites" class="grid-3">
+          <div class="card" style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)">
+            <div style="font-size:2rem;margin-bottom:.75rem">🌐</div>
+            <p>No websites yet</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════ PAGE: BUILDER ══════════════════════════════ -->
+<div id="page-builder" class="hidden">
+  <nav class="builder-nav">
+    <div class="builder-nav-left">
+      <button class="btn btn-ghost btn-sm" onclick="showPage('dashboard')" title="Back to dashboard">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <input type="text" class="builder-title-input" id="builder-title" value="My Website" onchange="markDirty()"/>
+      <span class="badge badge-amber" id="builder-status-badge">Draft</span>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn btn-secondary btn-sm" onclick="saveWebsite()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+        Save
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="publishWebsite()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9l20-7z"/></svg>
+        Publish
+      </button>
+    </div>
+  </nav>
+  <div class="builder-body">
+    <!-- LEFT PANEL -->
+    <aside class="builder-panel">
+      <div class="builder-panel-tabs">
+        <button class="panel-tab active" onclick="switchPanelTab('content',this)">Content</button>
+        <button class="panel-tab" onclick="switchPanelTab('sections',this)">Sections</button>
+        <button class="panel-tab" onclick="switchPanelTab('settings',this)">Settings</button>
+      </div>
+
+      <!-- CONTENT TAB -->
+      <div id="panel-content" class="panel-content active">
+        <div id="section-editor-container"></div>
+      </div>
+
+      <!-- SECTIONS TAB -->
+      <div id="panel-sections" class="panel-content">
+        <div id="sections-list" style="margin-bottom:1rem"></div>
+        <button class="btn btn-secondary btn-block btn-sm" onclick="openAddSectionModal()">+ Add Section</button>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div id="panel-settings" class="panel-content">
+        <div class="form-group">
+          <label>Website Title</label>
+          <input type="text" id="settings-title" class="form-control" placeholder="My Website" oninput="syncTitle(this.value)"/>
+        </div>
+        <div class="form-group">
+          <label>Site Slug (URL)</label>
+          <input type="text" id="settings-slug" class="form-control" placeholder="my-site"/>
+          <small class="text-muted text-xs mt-2">ocrown.com/<span id="slug-preview" style="color:var(--accent)">my-site</span></small>
+        </div>
+        <div class="form-group">
+          <label>Primary Color</label>
+          <input type="color" id="settings-color" class="form-control" value="#6ee7b7" style="height:40px;padding:.2rem" oninput="markDirty()"/>
+        </div>
+        <div class="form-group">
+          <label>Custom Domain (optional)</label>
+          <input type="text" id="settings-domain" class="form-control" placeholder="www.yourdomain.com" oninput="markDirty()"/>
+        </div>
+        <div id="dns-instructions" class="hidden mt-4">
+          <div class="text-xs text-muted fw-600 mb-2">DNS CONFIGURATION</div>
+          <p class="text-xs text-muted mb-2">Point your domain to Ocrown by adding these DNS records:</p>
+          <table class="dns-table">
+            <tr><th>Type</th><th>Name</th><th>Value</th></tr>
+            <tr><td>A</td><td>@</td><td><code>76.76.21.21</code></td></tr>
+            <tr><td>CNAME</td><td>www</td><td><code>ocrown.com</code></td></tr>
+          </table>
+          <p class="text-xs text-muted mt-2">Changes can take up to 48 hours to propagate.</p>
+        </div>
+        <button class="btn btn-secondary btn-block btn-sm mt-4" onclick="saveDomainSettings()">Save Settings</button>
+      </div>
+    </aside>
+
+    <!-- PREVIEW AREA -->
+    <div class="builder-preview">
+      <div class="preview-toolbar">
+        <span class="text-xs text-muted">Preview</span>
+        <div class="preview-sizes">
+          <button class="preview-size-btn active" onclick="setPreviewSize('desktop',this)">🖥 Desktop</button>
+          <button class="preview-size-btn" onclick="setPreviewSize('tablet',this)">⬛ Tablet</button>
+          <button class="preview-size-btn" onclick="setPreviewSize('mobile',this)">📱 Mobile</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="refreshPreview()">↻ Refresh</button>
+      </div>
+      <iframe id="preview-iframe" class="preview-frame" sandbox="allow-same-origin allow-scripts"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: NEW WEBSITE ════════════════════════ -->
+<div id="modal-new-website" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Create New Website</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-new-website')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Website Name</label>
+      <input type="text" id="new-site-name" class="form-control" placeholder="e.g. My Awesome School"/>
+    </div>
+    <div class="form-group">
+      <label>Site Slug (URL)</label>
+      <input type="text" id="new-site-slug" class="form-control" placeholder="e.g. my-awesome-school"/>
+      <small class="text-muted text-xs mt-2">Will be accessible at: ocrown.com/<span id="new-slug-preview" style="color:var(--accent)">my-awesome-school</span></small>
+    </div>
+    <div class="form-group">
+      <label>Website Type</label>
+      <select id="new-site-type" class="form-control" onchange="updateTemplateDesc()">
+        <option value="school">🏫 School</option>
+        <option value="business">🏢 Business</option>
+        <option value="store">🛒 E-Commerce Store</option>
+        <option value="portfolio">🎨 Portfolio</option>
+      </select>
+    </div>
+    <div id="template-description" class="card" style="margin-bottom:1rem;font-size:13px;color:var(--muted)">
+      Perfect for schools, universities, and educational institutions. Includes hero, about, admissions, and contact sections.
+    </div>
+    <div class="flex gap-3 justify-between">
+      <button class="btn btn-secondary" onclick="closeModal('modal-new-website')">Cancel</button>
+      <button class="btn btn-primary" onclick="createNewWebsite()">Create & Edit →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: ADD SECTION ═══════════════════════ -->
+<div id="modal-add-section" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Add Section</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-add-section')">✕</button>
+    </div>
+    <p class="text-muted text-sm mb-4">Choose a section type to add to your website</p>
+    <div id="section-type-grid" class="grid-2"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: DELETE CONFIRM ════════════════════ -->
+<div id="modal-delete" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Delete Website</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-delete')">✕</button>
+    </div>
+    <p class="text-muted" style="margin-bottom:1.5rem">Are you sure you want to delete <strong id="delete-site-name"></strong>? This action cannot be undone.</p>
+    <div class="flex gap-3 justify-between">
+      <button class="btn btn-secondary" onclick="closeModal('modal-delete')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteWebsite()">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL: PUBLISH SUCCESS ═══════════════════ -->
+<div id="modal-publish-success" class="modal-overlay hidden">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+    <h3 class="modal-title" style="margin-bottom:.5rem">Website Published!</h3>
+    <p class="text-muted text-sm mb-4">Your website is now live and accessible at:</p>
+    <div class="publish-url-box">
+      <span class="url-text" id="publish-success-url"></span>
+      <button class="btn btn-secondary btn-sm" onclick="copyPublishUrl()">Copy</button>
+    </div>
+    <div class="flex gap-3 justify-between">
+      <button class="btn btn-secondary" onclick="closeModal('modal-publish-success')">Back to Editor</button>
+      <button class="btn btn-primary" onclick="viewPublishedSite()">View Live Site →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ FIREBASE & APP SCRIPTS ══════════════════════ -->
+<script type="module">
+// ── FIREBASE SETUP ────────────────────────────────────────────────
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, deleteDoc, updateDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAozsH2cIlpor-X9kCQIMsfCPIRNPRPosQ",
+  authDomain: "ocrownveterinary.firebaseapp.com",
+  databaseURL: "https://ocrownveterinary-default-rtdb.firebaseio.com",
+  projectId: "ocrownveterinary",
+  storageBucket: "ocrownveterinary.firebasestorage.app",
+  messagingSenderId: "946404927243",
+  appId: "1:946404927243:web:c0c873e6a3b5d0b18ea40e"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ── APP STATE ─────────────────────────────────────────────────────
+let currentUser = null;
+let currentUserData = null;
+let currentWebsite = null; // site being edited
+let isDirty = false;
+let deletePendingSiteId = null;
+let publishedSiteUrl = '';
+
+// ── TEMPLATE DEFAULTS ─────────────────────────────────────────────
+const TEMPLATE_DESCS = {
+  school:"Perfect for schools, universities, and educational institutions. Includes hero, about, admissions, and contact sections.",
+  business:"Ideal for companies and service providers. Includes hero, services, about, and contact sections.",
+  store:"For online retailers. Includes product listing, cart system, and Paystack-ready checkout.",
+  portfolio:"For creatives and professionals. Includes hero, about me, projects, and contact sections."
+};
+
+const TEMPLATE_ICONS = {school:'🏫',business:'🏢',store:'🛒',portfolio:'🎨'};
+
+const TEMPLATE_COLORS = {
+  school:'#3b82f6',business:'#22c55e',store:'#f59e0b',portfolio:'#a78bfa'
+};
+
+const DEFAULT_SECTIONS = {
+  school:[
+    {id:'hero',type:'hero',label:'Hero / Banner',data:{heading:'Welcome to Our School',subheading:'Nurturing minds, building futures',buttonText:'Explore Admissions',buttonLink:'#admissions',bgColor:'#1a3a5c',bgImage:''}},
+    {id:'about',type:'text',label:'About School',data:{heading:'About Our School',body:'We are committed to academic excellence and the holistic development of every student. Our world-class faculty and state-of-the-art facilities provide the perfect learning environment.'}},
+    {id:'admissions',type:'admissions',label:'Admissions',data:{heading:'Admissions Open',body:'We welcome applications for the upcoming academic year. Our admissions process is transparent, fair, and merit-based.',deadline:'2025-09-30',contactEmail:'admissions@school.edu'}},
+    {id:'contact',type:'contact',label:'Contact',data:{heading:'Contact Us',phone:'+1 (555) 000-0000',email:'info@school.edu',address:'123 Education Lane, Knowledge City'}}
+  ],
+  business:[
+    {id:'hero',type:'hero',label:'Hero / Banner',data:{heading:'Grow Your Business With Us',subheading:'Professional solutions tailored to your needs',buttonText:'Get Started',buttonLink:'#services',bgColor:'#1a2a1a',bgImage:''}},
+    {id:'services',type:'services',label:'Services',data:{heading:'Our Services',items:[{title:'Consulting',desc:'Strategic business consulting for growth.'},{title:'Marketing',desc:'Digital marketing and brand building.'},{title:'Development',desc:'Custom software and web development.'}]}},
+    {id:'about',type:'text',label:'About Company',data:{heading:'About Us',body:'We are a results-driven company with over 10 years of experience helping businesses achieve their goals through innovative strategies and cutting-edge technology.'}},
+    {id:'contact',type:'contact',label:'Contact',data:{heading:'Get In Touch',phone:'+1 (555) 000-0000',email:'hello@business.com',address:'456 Business Ave, Commerce City'}}
+  ],
+  store:[
+    {id:'hero',type:'hero',label:'Store Banner',data:{heading:'Shop the Best Deals',subheading:'Quality products at unbeatable prices',buttonText:'Shop Now',buttonLink:'#products',bgColor:'#3a1a2a',bgImage:''}},
+    {id:'products',type:'products',label:'Products',data:{heading:'Our Products',items:[{name:'Product One',price:'₦5,000',image:'',desc:'High quality item.'},{name:'Product Two',price:'₦8,500',image:'',desc:'Premium grade.'},{name:'Product Three',price:'₦12,000',image:'',desc:'Best seller.'}]}},
+    {id:'contact',type:'contact',label:'Contact',data:{heading:'Contact Store',phone:'+1 (555) 000-0000',email:'shop@store.com',address:'789 Market St, Trade City'}}
+  ],
+  portfolio:[
+    {id:'hero',type:'hero',label:'Hero',data:{heading:'Hi, I\'m a Creative Designer',subheading:'I craft beautiful digital experiences',buttonText:'View My Work',buttonLink:'#projects',bgColor:'#2a1a3a',bgImage:''}},
+    {id:'about',type:'text',label:'About Me',data:{heading:'About Me',body:'I\'m a passionate designer and developer with 5+ years of experience creating stunning websites, apps, and brand identities for clients worldwide.'}},
+    {id:'projects',type:'projects',label:'Projects',data:{heading:'My Projects',items:[{title:'Brand Identity',desc:'Logo and brand design for a tech startup.',tag:'Design'},{title:'E-Commerce Platform',desc:'Full-stack online store with payment integration.',tag:'Development'},{title:'Mobile App UI',desc:'Modern UI for a fitness tracking app.',tag:'UI/UX'}]}},
+    {id:'contact',type:'contact',label:'Contact',data:{heading:'Let\'s Work Together',phone:'+1 (555) 000-0000',email:'hello@myportfolio.com',address:'Remote — Available Worldwide'}}
+  ]
+};
+
+const SECTION_TYPES = [
+  {type:'hero',label:'Hero / Banner',icon:'🖼️',desc:'Full-width banner with heading and CTA'},
+  {type:'text',label:'Text Block',icon:'📝',desc:'Heading and body text section'},
+  {type:'services',label:'Services',icon:'⚙️',desc:'List of services or features'},
+  {type:'products',label:'Products',icon:'📦',desc:'Product grid with prices'},
+  {type:'projects',label:'Projects',icon:'🗂️',desc:'Portfolio project cards'},
+  {type:'admissions',label:'Admissions',icon:'📋',desc:'School admissions info'},
+  {type:'contact',label:'Contact',icon:'📞',desc:'Contact details section'},
+  {type:'gallery',label:'Gallery',icon:'🖼️',desc:'Image gallery grid'},
+  {type:'faq',label:'FAQ',icon:'❓',desc:'Frequently asked questions'},
+  {type:'team',label:'Team',icon:'👥',desc:'Team members section'},
+];
+
+// ── TOAST SYSTEM ──────────────────────────────────────────────────
+function toast(msg, type='info', duration=3500){
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300)}, duration);
+}
+window.toast = toast;
+
+// ── PAGE ROUTING ──────────────────────────────────────────────────
+function showPage(name){
+  ['loading','landing','auth','dashboard','builder'].forEach(p=>{
+    const el = document.getElementById('page-'+p);
+    if(el) el.classList.toggle('hidden', p!==name);
+  });
+}
+window.showPage = showPage;
+
+function showAuth(mode){
+  showPage('auth');
+  toggleAuthForm(mode);
+}
+window.showAuth = showAuth;
+
+function toggleAuthForm(mode){
+  document.getElementById('form-login').classList.toggle('hidden', mode!=='login');
+  document.getElementById('form-signup').classList.toggle('hidden', mode!=='signup');
+}
+window.toggleAuthForm = toggleAuthForm;
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+window.openModal = openModal;
+window.closeModal = closeModal;
+
+// Click outside to close
+document.addEventListener('click', e => {
+  if(e.target.classList.contains('modal-overlay')) e.target.classList.add('hidden');
+});
+
+// ── AUTH HANDLERS ─────────────────────────────────────────────────
+async function handleLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pwd = document.getElementById('login-password').value;
+  if(!email||!pwd){toast('Please fill in all fields','error');return;}
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Signing in…';
+  try{
+    await signInWithEmailAndPassword(auth, email, pwd);
+  }catch(e){
+    toast(e.message,'error');
+    btn.disabled=false; btn.innerHTML='Sign In';
+  }
+}
+window.handleLogin = handleLogin;
+
+async function handleSignup(){
+  const fname = document.getElementById('signup-fname').value.trim();
+  const lname = document.getElementById('signup-lname').value.trim();
+  const username = document.getElementById('signup-username').value.trim().toLowerCase().replace(/\s+/g,'-');
+  const email = document.getElementById('signup-email').value.trim();
+  const pwd = document.getElementById('signup-password').value;
+  if(!fname||!lname||!username||!email||!pwd){toast('Please fill in all fields','error');return;}
+  if(pwd.length<6){toast('Password must be at least 6 characters','error');return;}
+  const btn = document.getElementById('btn-signup');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Creating account…';
+  try{
+    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    await setDoc(doc(db,'users',cred.user.uid),{
+      firstName:fname, lastName:lname, username, email,
+      createdAt:serverTimestamp(), plan:'free'
+    });
+    toast('Account created! Welcome to Ocrown 🎉','success');
+  }catch(e){
+    toast(e.message,'error');
+    btn.disabled=false; btn.innerHTML='Create Account';
+  }
+}
+window.handleSignup = handleSignup;
+
+async function handleLogout(){
+  await signOut(auth);
+  showPage('landing');
+  toast('Signed out successfully','info');
+}
+window.handleLogout = handleLogout;
+
+// ── AUTH STATE OBSERVER ───────────────────────────────────────────
+onAuthStateChanged(auth, async user=>{
+  if(user){
+    currentUser = user;
+    try{
+      const snap = await getDoc(doc(db,'users',user.uid));
+      currentUserData = snap.exists() ? snap.data() : {email:user.email, username:'user', firstName:'', lastName:''};
+    }catch(e){
+      currentUserData = {email:user.email, username:'user', firstName:'', lastName:''};
+    }
+    loadDashboard();
+    showPage('dashboard');
+  }else{
+    currentUser = null;
+    currentUserData = null;
+    showPage('landing');
+  }
+  document.getElementById('page-loading').classList.add('hidden');
+});
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+async function loadDashboard(){
+  if(!currentUser) return;
+  const name = currentUserData?.firstName || currentUserData?.username || 'there';
+  const hr = new Date().getHours();
+  const greet = hr<12?'Good morning':'hr<18?Good afternoon':'Good evening';
+  document.getElementById('dash-greeting').textContent = `${hr<12?'Good morning':hr<18?'Good afternoon':'Good evening'}, ${name} 👋`;
+  document.getElementById('dash-username').textContent = currentUserData?.username||currentUserData?.email;
+  const av = document.getElementById('dash-avatar');
+  av.textContent = (currentUserData?.firstName||currentUserData?.email||'U')[0].toUpperCase();
+
+  const sites = await fetchUserSites();
+  const published = sites.filter(s=>s.published);
+  const domains = sites.filter(s=>s.customDomain);
+  document.getElementById('stat-total').textContent = sites.length;
+  document.getElementById('stat-published').textContent = published.length;
+  document.getElementById('stat-drafts').textContent = sites.length - published.length;
+  document.getElementById('stat-domains').textContent = domains.length;
+  document.getElementById('sites-count').textContent = `${sites.length} website${sites.length!==1?'s':''}`;
+
+  renderSiteCards('dash-recent-sites', sites.slice(0,6));
+  renderSiteCards('dash-all-sites', sites);
+}
+window.loadDashboard = loadDashboard;
+
+async function fetchUserSites(){
+  try{
+    const q = query(collection(db,'websites'), where('ownerId','==',currentUser.uid), orderBy('updatedAt','desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){
+    // Fallback if index not created
+    try{
+      const q2 = query(collection(db,'websites'), where('ownerId','==',currentUser.uid));
+      const snap2 = await getDocs(q2);
+      return snap2.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0));
+    }catch(e2){
+      return [];
+    }
+  }
+}
+
+function renderSiteCards(containerId, sites){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  if(!sites.length){
+    el.innerHTML = `<div class="card" style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)">
+      <div style="font-size:2rem;margin-bottom:.75rem">🌐</div>
+      <p style="margin-bottom:1rem">No websites yet. Create your first one!</p>
+      <button class="btn btn-primary" onclick="openNewWebsiteModal()">+ Create Website</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML = sites.map(s=>`
+    <div class="website-card">
+      <div class="website-card-thumb" style="background:${TEMPLATE_COLORS[s.type]||'#333'}22">
+        <span style="font-size:2.5rem">${TEMPLATE_ICONS[s.type]||'🌐'}</span>
+        ${s.published?`<span class="badge badge-green" style="position:absolute;top:.5rem;right:.5rem">Live</span>`:`<span class="badge badge-amber" style="position:absolute;top:.5rem;right:.5rem">Draft</span>`}
+      </div>
+      <div class="website-card-body">
+        <h3>${escHtml(s.title||'Untitled')}</h3>
+        <p>${s.type||'website'} · ${s.slug||s.id}</p>
+        <div class="website-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openBuilder('${s.id}')">✏️ Edit</button>
+          ${s.published?`<button class="btn btn-secondary btn-sm" onclick="openLiveSite('${s.id}')">🔗 View</button>`:''}
+          <button class="btn btn-danger btn-sm" onclick="promptDeleteWebsite('${s.id}','${escHtml(s.title||'Untitled')}')">🗑️</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showDashTab(tab){
+  ['overview','sites'].forEach(t=>{
+    document.getElementById(`dash-tab-${t}`).classList.toggle('hidden',t!==tab);
+  });
+  document.querySelectorAll('.dash-sidebar button').forEach((b,i)=>{
+    b.classList.toggle('active', (tab==='overview'&&i===0)||(tab==='sites'&&i===1));
+  });
+  if(tab==='sites') loadDashboard();
+}
+window.showDashTab = showDashTab;
+
+// ── NEW WEBSITE MODAL ─────────────────────────────────────────────
+function openNewWebsiteModal(){
+  document.getElementById('new-site-name').value='';
+  document.getElementById('new-site-slug').value='';
+  document.getElementById('new-site-type').value='school';
+  updateTemplateDesc();
+  openModal('modal-new-website');
+  document.getElementById('new-site-name').addEventListener('input',e=>{
+    const slug = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    document.getElementById('new-site-slug').value=slug;
+    document.getElementById('new-slug-preview').textContent=slug||'my-site';
+  });
+  document.getElementById('new-site-slug').addEventListener('input',e=>{
+    document.getElementById('new-slug-preview').textContent=e.target.value||'my-site';
+  });
+}
+window.openNewWebsiteModal = openNewWebsiteModal;
+
+function updateTemplateDesc(){
+  const type = document.getElementById('new-site-type').value;
+  document.getElementById('template-description').textContent = TEMPLATE_DESCS[type]||'';
+}
+window.updateTemplateDesc = updateTemplateDesc;
+
+async function createNewWebsite(){
+  const title = document.getElementById('new-site-name').value.trim();
+  const slug = document.getElementById('new-site-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
+  const type = document.getElementById('new-site-type').value;
+  if(!title){toast('Please enter a website name','error');return;}
+  if(!slug){toast('Please enter a URL slug','error');return;}
+
+  const sections = JSON.parse(JSON.stringify(DEFAULT_SECTIONS[type]||DEFAULT_SECTIONS.business));
+  sections.forEach((s,i)=>{s.id=`section-${Date.now()}-${i}`;});
+
+  try{
+    const siteRef = doc(collection(db,'websites'));
+    const siteData = {
+      title, slug, type,
+      ownerId: currentUser.uid,
+      ownerUsername: currentUserData?.username||'user',
+      sections,
+      published: false,
+      customDomain: '',
+      primaryColor: TEMPLATE_COLORS[type]||'#6ee7b7',
+      logoUrl: '',
+      bannerUrl: '',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    await setDoc(siteRef, siteData);
+    toast(`"${title}" created!`,'success');
+    closeModal('modal-new-website');
+    await openBuilder(siteRef.id);
+  }catch(e){
+    toast('Failed to create website: '+e.message,'error');
+  }
+}
+window.createNewWebsite = createNewWebsite;
+
+// ── BUILDER ───────────────────────────────────────────────────────
+async function openBuilder(siteId){
+  const snap = await getDoc(doc(db,'websites',siteId));
+  if(!snap.exists()){toast('Website not found','error');return;}
+  currentWebsite = {id:siteId,...snap.data()};
+  isDirty = false;
+
+  document.getElementById('builder-title').value = currentWebsite.title||'';
+  document.getElementById('settings-title').value = currentWebsite.title||'';
+  document.getElementById('settings-slug').value = currentWebsite.slug||'';
+  document.getElementById('slug-preview').textContent = currentWebsite.slug||'';
+  document.getElementById('settings-color').value = currentWebsite.primaryColor||'#6ee7b7';
+  document.getElementById('settings-domain').value = currentWebsite.customDomain||'';
+  document.getElementById('builder-status-badge').textContent = currentWebsite.published?'Live':'Draft';
+  document.getElementById('builder-status-badge').className = 'badge '+(currentWebsite.published?'badge-green':'badge-amber');
+  if(currentWebsite.customDomain) document.getElementById('dns-instructions').classList.remove('hidden');
+
+  renderSectionsList();
+  selectSection(currentWebsite.sections?.[0]?.id||null);
+  refreshPreview();
+  showPage('builder');
+}
+window.openBuilder = openBuilder;
+
+function markDirty(){ isDirty=true; }
+window.markDirty = markDirty;
+
+function syncTitle(val){
+  if(document.getElementById('builder-title')) document.getElementById('builder-title').value=val;
+  if(currentWebsite) currentWebsite.title = val;
+  markDirty();
+  refreshPreview();
+}
+window.syncTitle = syncTitle;
+
+function renderSectionsList(){
+  const el = document.getElementById('sections-list');
+  if(!el||!currentWebsite) return;
+  el.innerHTML = (currentWebsite.sections||[]).map(s=>`
+    <div class="section-item" id="si-${s.id}" onclick="selectSection('${s.id}')">
+      <div class="section-item-header">
+        <div>
+          <div class="section-item-title">${escHtml(s.label||s.type)}</div>
+          <div class="section-item-type">${s.type}</div>
+        </div>
+        <button class="section-remove" onclick="event.stopPropagation();removeSection('${s.id}')" title="Remove">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectSection(sectionId){
+  if(!sectionId||!currentWebsite) return;
+  const sec = currentWebsite.sections?.find(s=>s.id===sectionId);
+  if(!sec) return;
+  document.querySelectorAll('.section-item').forEach(el=>el.classList.remove('active'));
+  const si = document.getElementById('si-'+sectionId);
+  if(si) si.classList.add('active');
+  renderSectionEditor(sec);
+  switchPanelTab('content', document.querySelector('.panel-tab'));
+  document.querySelectorAll('.panel-tab')[0].click();
+}
+window.selectSection = selectSection;
+
+function renderSectionEditor(sec){
+  const el = document.getElementById('section-editor-container');
+  if(!el) return;
+  let html = `<div class="fw-600 text-sm mb-4" style="color:var(--muted);text-transform:uppercase;letter-spacing:.06em">${sec.label||sec.type}</div>`;
+
+  switch(sec.type){
+    case 'hero':
+      html += fieldGroup('Heading', 'text', `sec_heading_${sec.id}`, sec.data.heading, `updateSectionData('${sec.id}','heading',this.value)`)
+            + fieldGroup('Subheading', 'text', `sec_sub_${sec.id}`, sec.data.subheading, `updateSectionData('${sec.id}','subheading',this.value)`)
+            + fieldGroup('Button Text', 'text', `sec_btn_${sec.id}`, sec.data.buttonText, `updateSectionData('${sec.id}','buttonText',this.value)`)
+            + fieldGroup('Background Color', 'color', `sec_bg_${sec.id}`, sec.data.bgColor||'#1a1a2a', `updateSectionData('${sec.id}','bgColor',this.value)`)
+            + imageUploadField(sec.id, 'bgImage', 'Banner Image', sec.data.bgImage);
+      break;
+    case 'text':
+    case 'about':
+      html += fieldGroup('Heading', 'text', `sec_h_${sec.id}`, sec.data.heading, `updateSectionData('${sec.id}','heading',this.value)`)
+            + textareaGroup('Content', `sec_body_${sec.id}`, sec.data.body, `updateSectionData('${sec.id}','body',this.value)`);
+      break;
+    case 'contact':
+      html += fieldGroup('Heading', 'text', `sec_h_${sec.id}`, sec.data.heading, `updateSectionData('${sec.id}','heading',this.value)`)
+            + fieldGroup('Phone', 'tel', `sec_ph_${sec.id}`, sec.data.phone, `updateSectionData('${sec.id}','phone',this.value)`)
+            + fieldGroup('Email', 'email', `sec_em_${sec.id}`, sec.data.email, `updateSectionData('${sec.id}','email',this.value)`)
+            + fieldGroup('Address', 'text', `sec_ad_${sec.id}`, sec.data.address, `updateSectionData('${sec.id}','address',this.value)`);
+      break;
+    case 'services':
+      html += fieldGroup('Heading', 'text', `sec_h_${sec.id}`, sec.data.heading, `updateSectionData('${sec.id}','heading',this.value)`);
+      (sec.data.items||[]).forEach((item,i)=>{
+        html += `<div class="card" style="margin-bottom:.75rem">
+          <div class="text-xs text-muted fw-600 mb-2">SERVICE ${i+1}</div>
+          ${fieldGroup('Title','text',`svc_t_${sec.id}_${i}`,item.title,`updateServiceItem('${sec.id}',${i},'title',this.value)`)}
+          ${fieldGroup('Description','text',`svc_d_${sec.id}_${i}`,item.desc,`updateServiceItem('${sec.id}',${i},'desc',this.value)`)}
+        </div>`;
+      });
+      html += `<button class="btn btn-secondary btn-sm btn-block mt-2" onclick="addServiceItem('${sec.id}')">+ Add Service</button>`;
+      break;
+    case 'products':
+      html += fieldGroup('Heading', 'text', `sec_h_${sec.id}`, sec.data.heading, `updateSectionData('${sec.id}','heading',this.value)`);
+      (sec.data.items||[]).forEach((item,i)=>{
+        html += `<div class="card" style="margin-bottom:.75rem">
+          <div class="text-xs text-muted fw-600 mb-2">PRODUCT ${i+1}</div>
+          ${fieldGroup('Name','text',`prd_n_${sec.id}_${i}`,item.name,`updateProductItem('${sec.id}',${i},'name',this.value)`)}
+          ${fieldGroup('Price','text',`prd_p_${sec.id}_${i}`,item.price,`updateProductItem('${sec.id}',${i},'price',this.value)`)}
+          ${fieldGroup('Description','text',`prd_d_${sec.id}_${i}`,item.desc,`updateProductItem('${sec.id}',${i},'desc',this.value)`)}
+        </div>`;
+      });
+      html += `<button class="btn btn-secondary btn-sm btn-block mt-2" onclick="addProductItem('${sec.id}')">+ Add Product</button>`;
+      break;
+    case 'projects':
+      html += fieldGroup('Heading', 'text', `sec_h_${sec.id}`, sec.data.heading, `updateSectionData('${sec.id}','heading',this.value)`);
+      (sec.data.items||[]).forEach((item,i)=>{
+        html += `<div class="card" style="margin-bottom:.75rem">
+          <div class="text-xs text-muted fw-600 mb-2">PROJECT ${i+1}</div>
+          ${fieldGroup('Title','text',`prj_t_${sec.id}_${i}`,item.title,`updateProjectItem('${sec.id}',${i},'title',this.value)`)}
+          ${fieldGroup('Description','text',`prj_d_${sec.id}_${i}`,item.desc,`updateProjectItem('${sec.id}',${i},'desc',this.value)`)}
+          ${fieldGroup('Tag/Category','text',`prj_g_${sec.id}_${i}`,item.tag,`updateProjectItem('${sec.id}',${i},'tag',this.value)`)}
+        </div>`;
+      });
+      html += `<button class="btn btn-secondary btn-sm btn-block mt-2" onclick="addProjectItem('${sec.id}')">+ Add Project</button>`;
+      break;
+    case 'admissions':
+      html += fieldGroup('Heading', 'text', `sec_h_${sec.id}`, sec.data.heading, `updateSectionData('${sec.id}','heading',this.value)`)
+            + textareaGroup('Details', `sec_b_${sec.id}`, sec.data.body, `updateSectionData('${sec.id}','body',this.value)`)
+            + fieldGroup('Application Deadline', 'date', `sec_dl_${sec.id}`, sec.data.deadline, `updateSectionData('${sec.id}','deadline',this.value)`)
+            + fieldGroup('Contact Email', 'email', `sec_ce_${sec.id}`, sec.data.contactEmail, `updateSectionData('${sec.id}','contactEmail',this.value)`);
+      break;
+    default:
+      html += fieldGroup('Heading', 'text', `sec_h_${sec.id}`, sec.data?.heading||'', `updateSectionData('${sec.id}','heading',this.value)`)
+            + textareaGroup('Content', `sec_body_${sec.id}`, sec.data?.body||'', `updateSectionData('${sec.id}','body',this.value)`);
+  }
+
+  // Logo upload (global)
+  html += `<div style="border-top:1px solid var(--border);margin:1rem 0;padding-top:1rem">
+    <div class="text-xs text-muted fw-600 mb-3">SITE BRANDING</div>
+    ${imageUploadField('global','logo','Site Logo', currentWebsite.logoUrl||'')}
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function fieldGroup(label, type, id, value, onchange){
+  const val = escHtml(value||'');
+  return `<div class="form-group">
+    <label>${label}</label>
+    <input type="${type}" id="${id}" class="form-control" value="${val}" oninput="${onchange}" onchange="refreshPreview()"/>
+  </div>`;
+}
+function textareaGroup(label, id, value, onchange){
+  return `<div class="form-group">
+    <label>${label}</label>
+    <textarea id="${id}" class="form-control" oninput="${onchange}" onchange="refreshPreview()">${escHtml(value||'')}</textarea>
+  </div>`;
+}
+function imageUploadField(secId, field, label, currentUrl){
+  const id = `img_${secId}_${field}`;
+  return `<div class="form-group">
+    <label>${label}</label>
+    ${currentUrl?`<img src="${escHtml(currentUrl)}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:.5rem;border:1px solid var(--border)"/>`:''}
+    <input type="file" id="${id}" class="form-control" accept="image/*" onchange="handleImageUpload(event,'${secId}','${field}')" style="padding:.3rem"/>
+    ${currentUrl?`<button class="btn btn-danger btn-sm btn-block mt-2" onclick="clearImage('${secId}','${field}')">Remove Image</button>`:''}
+  </div>`;
+}
+
+window.updateSectionData = function(sectionId, key, value){
+  if(!currentWebsite) return;
+  const sec = currentWebsite.sections?.find(s=>s.id===sectionId);
+  if(sec){ sec.data[key]=value; markDirty(); }
+};
+window.updateServiceItem = function(sectionId, i, key, value){
+  const sec = currentWebsite?.sections?.find(s=>s.id===sectionId);
+  if(sec?.data?.items?.[i]){ sec.data.items[i][key]=value; markDirty(); }
+};
+window.updateProductItem = function(sectionId, i, key, value){
+  const sec = currentWebsite?.sections?.find(s=>s.id===sectionId);
+  if(sec?.data?.items?.[i]){ sec.data.items[i][key]=value; markDirty(); }
+};
+window.updateProjectItem = function(sectionId, i, key, value){
+  const sec = currentWebsite?.sections?.find(s=>s.id===sectionId);
+  if(sec?.data?.items?.[i]){ sec.data.items[i][key]=value; markDirty(); }
+};
+
+window.addServiceItem = function(sectionId){
+  const sec = currentWebsite?.sections?.find(s=>s.id===sectionId);
+  if(sec){ sec.data.items = sec.data.items||[]; sec.data.items.push({title:'New Service',desc:'Description here.'}); markDirty(); selectSection(sectionId); }
+};
+window.addProductItem = function(sectionId){
+  const sec = currentWebsite?.sections?.find(s=>s.id===sectionId);
+  if(sec){ sec.data.items = sec.data.items||[]; sec.data.items.push({name:'New Product',price:'₦0',desc:'Description.'}); markDirty(); selectSection(sectionId); }
+};
+window.addProjectItem = function(sectionId){
+  const sec = currentWebsite?.sections?.find(s=>s.id===sectionId);
+  if(sec){ sec.data.items = sec.data.items||[]; sec.data.items.push({title:'New Project',desc:'Description.',tag:'Other'}); markDirty(); selectSection(sectionId); }
+};
+
+window.handleImageUpload = async function(event, sectionId, field){
+  const file = event.target.files[0];
+  if(!file||!currentUser) return;
+  toast('Uploading image…','info');
+  try{
+    const storageRef = ref(storage, `users/${currentUser.uid}/images/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    if(sectionId==='global'){
+      currentWebsite.logoUrl = url;
+    }else{
+      const sec = currentWebsite.sections?.find(s=>s.id===sectionId);
+      if(sec) sec.data[field]=url;
+    }
+    markDirty();
+    selectSection(sectionId==='global'?currentWebsite.sections?.[0]?.id:sectionId);
+    refreshPreview();
+    toast('Image uploaded!','success');
+  }catch(e){
+    toast('Upload failed: '+e.message,'error');
+  }
+};
+
+window.clearImage = function(sectionId, field){
+  if(sectionId==='global'){ currentWebsite.logoUrl=''; }
+  else{ const sec = currentWebsite?.sections?.find(s=>s.id===sectionId); if(sec) sec.data[field]=''; }
+  markDirty(); refreshPreview();
+};
+
+function removeSection(sectionId){
+  if(!currentWebsite||!currentWebsite.sections) return;
+  currentWebsite.sections = currentWebsite.sections.filter(s=>s.id!==sectionId);
+  renderSectionsList();
+  if(currentWebsite.sections.length) selectSection(currentWebsite.sections[0].id);
+  else document.getElementById('section-editor-container').innerHTML = '<p class="text-muted text-sm" style="text-align:center;padding:2rem">Add a section to start editing</p>';
+  markDirty(); refreshPreview();
+}
+window.removeSection = removeSection;
+
+function openAddSectionModal(){
+  const grid = document.getElementById('section-type-grid');
+  grid.innerHTML = SECTION_TYPES.map(st=>`
+    <button class="card" style="text-align:left;cursor:pointer;border:1.5px solid var(--border);transition:border-color .15s;background:var(--card)" 
+      onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'"
+      onclick="addSection('${st.type}','${escHtml(st.label)}');closeModal('modal-add-section')">
+      <div style="font-size:1.5rem;margin-bottom:.4rem">${st.icon}</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:.2rem">${st.label}</div>
+      <div style="font-size:12px;color:var(--muted)">${st.desc}</div>
+    </button>
+  `).join('');
+  openModal('modal-add-section');
+}
+window.openAddSectionModal = openAddSectionModal;
+
+window.addSection = function(type, label){
+  if(!currentWebsite) return;
+  const newSec = {id:'sec-'+Date.now(), type, label, data:{heading:'New '+label,body:'Add your content here.'}};
+  if(type==='services') newSec.data = {heading:'Our Services', items:[{title:'Service 1',desc:'Description.'}]};
+  if(type==='products') newSec.data = {heading:'Our Products', items:[{name:'Product 1',price:'₦0',desc:'Description.'}]};
+  if(type==='projects') newSec.data = {heading:'Projects', items:[{title:'Project 1',desc:'Description.',tag:'Design'}]};
+  if(type==='contact') newSec.data = {heading:'Contact Us',phone:'',email:'',address:''};
+  if(type==='hero') newSec.data = {heading:'Welcome',subheading:'Subtitle here',buttonText:'Learn More',buttonLink:'#',bgColor:'#1a1a2a',bgImage:''};
+  if(type==='faq') newSec.data = {heading:'FAQ', items:[{q:'Question 1?',a:'Answer here.'}]};
+  if(type==='team') newSec.data = {heading:'Our Team', items:[{name:'Team Member',role:'Position',bio:'Bio here.'}]};
+  currentWebsite.sections = currentWebsite.sections||[];
+  currentWebsite.sections.push(newSec);
+  renderSectionsList();
+  selectSection(newSec.id);
+  markDirty(); refreshPreview();
+};
+
+async function saveWebsite(){
+  if(!currentWebsite||!currentUser) return;
+  const title = document.getElementById('builder-title').value.trim();
+  const slug = document.getElementById('settings-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'')||currentWebsite.slug;
+  const color = document.getElementById('settings-color').value;
+  currentWebsite.title = title||currentWebsite.title;
+  currentWebsite.slug = slug;
+  currentWebsite.primaryColor = color;
+  try{
+    await updateDoc(doc(db,'websites',currentWebsite.id),{
+      title:currentWebsite.title,
+      slug,
+      sections: currentWebsite.sections,
+      logoUrl: currentWebsite.logoUrl||'',
+      primaryColor: color,
+      updatedAt: serverTimestamp()
+    });
+    isDirty = false;
+    toast('Website saved!','success');
+  }catch(e){
+    toast('Save failed: '+e.message,'error');
+  }
+}
+window.saveWebsite = saveWebsite;
+
+async function publishWebsite(){
+  if(!currentWebsite) return;
+  await saveWebsite();
+  try{
+    await updateDoc(doc(db,'websites',currentWebsite.id),{
+      published: true,
+      publishedAt: serverTimestamp(),
+      publishedHtml: generateSiteHTML(currentWebsite)
+    });
+    currentWebsite.published = true;
+    document.getElementById('builder-status-badge').textContent='Live';
+    document.getElementById('builder-status-badge').className='badge badge-green';
+    const slug = currentWebsite.slug||currentWebsite.id;
+    const username = currentUserData?.username||'user';
+    publishedSiteUrl = `ocrown.com/${username}/${slug}`;
+    document.getElementById('publish-success-url').textContent = publishedSiteUrl;
+    openModal('modal-publish-success');
+  }catch(e){
+    toast('Publish failed: '+e.message,'error');
+  }
+}
+window.publishWebsite = publishWebsite;
+
+function saveDomainSettings(){
+  const domain = document.getElementById('settings-domain').value.trim();
+  if(domain){ document.getElementById('dns-instructions').classList.remove('hidden'); }
+  if(currentWebsite){ currentWebsite.customDomain=domain; markDirty(); }
+  saveWebsite();
+}
+window.saveDomainSettings = saveDomainSettings;
+
+function copyPublishUrl(){
+  navigator.clipboard.writeText(publishedSiteUrl).then(()=>toast('URL copied!','success'));
+}
+window.copyPublishUrl = copyPublishUrl;
+
+function viewPublishedSite(){
+  closeModal('modal-publish-success');
+  openLiveSite(currentWebsite.id);
+}
+window.viewPublishedSite = viewPublishedSite;
+
+function openLiveSite(siteId){
+  // Open live site HTML in new tab
+  getDoc(doc(db,'websites',siteId)).then(snap=>{
+    if(snap.exists()){
+      const site = {id:siteId,...snap.data()};
+      const html = generateSiteHTML(site);
+      const blob = new Blob([html],{type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      window.open(url,'_blank');
+    }
+  });
+}
+window.openLiveSite = openLiveSite;
+
+// DELETE
+function promptDeleteWebsite(siteId, siteTitle){
+  deletePendingSiteId = siteId;
+  document.getElementById('delete-site-name').textContent = siteTitle;
+  openModal('modal-delete');
+}
+window.promptDeleteWebsite = promptDeleteWebsite;
+
+async function confirmDeleteWebsite(){
+  if(!deletePendingSiteId) return;
+  try{
+    await deleteDoc(doc(db,'websites',deletePendingSiteId));
+    toast('Website deleted','info');
+    closeModal('modal-delete');
+    loadDashboard();
+    deletePendingSiteId=null;
+  }catch(e){
+    toast('Delete failed: '+e.message,'error');
+  }
+}
+window.confirmDeleteWebsite = confirmDeleteWebsite;
+
+// ── PREVIEW ───────────────────────────────────────────────────────
+function refreshPreview(){
+  if(!currentWebsite) return;
+  const title = document.getElementById('builder-title')?.value || currentWebsite.title;
+  const color = document.getElementById('settings-color')?.value || currentWebsite.primaryColor;
+  currentWebsite.title = title;
+  currentWebsite.primaryColor = color;
+  const html = generateSiteHTML(currentWebsite);
+  const iframe = document.getElementById('preview-iframe');
+  if(iframe){
+    iframe.srcdoc = html;
+  }
+}
+window.refreshPreview = refreshPreview;
+
+function setPreviewSize(size, btn){
+  document.querySelectorAll('.preview-size-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const frame = document.getElementById('preview-iframe');
+  if(!frame) return;
+  frame.className = 'preview-frame '+(size!=='desktop'?size:'');
+}
+window.setPreviewSize = setPreviewSize;
+
+function switchPanelTab(tab, btn){
+  document.querySelectorAll('.panel-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.panel-tab').forEach(b=>b.classList.remove('active'));
+  const el = document.getElementById('panel-'+tab);
+  if(el) el.classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+window.switchPanelTab = switchPanelTab;
+
+// ── SITE HTML GENERATOR ───────────────────────────────────────────
+function generateSiteHTML(site){
+  const primaryColor = site.primaryColor || '#6ee7b7';
+  const title = site.title || 'My Website';
+  const logoHtml = site.logoUrl ? `<img src="${site.logoUrl}" alt="Logo" style="height:40px;object-fit:contain">` : `<span class="site-logo-text">${escHtml(title)}</span>`;
+
+  const sectionsHtml = (site.sections||[]).map(sec => renderSectionHtml(sec, primaryColor)).join('\n');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>${escHtml(title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:${primaryColor};--bg:#fff;--text:#111;--muted:#666;--border:#e5e7eb}
+body{font-family:'DM Sans',sans-serif;color:var(--text);line-height:1.6}
+h1,h2,h3,h4{font-family:'Syne',sans-serif;line-height:1.2}
+img{max-width:100%;display:block}
+a{color:var(--primary);text-decoration:none}
+
+/* NAV */
+.site-nav{display:flex;align-items:center;justify-content:space-between;padding:1rem 5%;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:0 1px 10px rgba(0,0,0,.05)}
+.site-logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--primary)}
+.nav-links{display:flex;gap:1.5rem}
+.nav-links a{font-size:14px;color:var(--muted);transition:color .15s}
+.nav-links a:hover{color:var(--text)}
+
+/* HERO */
+.hero-sec{min-height:480px;display:flex;align-items:center;justify-content:center;text-align:center;padding:5rem 5%;position:relative;overflow:hidden;color:#fff}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0}
+.hero-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:1}
+.hero-content{position:relative;z-index:2;max-width:720px}
+.hero-content h1{font-size:clamp(1.8rem,4vw,3rem);font-weight:800;margin-bottom:1rem}
+.hero-content p{font-size:1.1rem;opacity:.85;margin-bottom:2rem}
+.btn-hero{display:inline-block;background:var(--primary);color:#111;padding:.8rem 2rem;border-radius:8px;font-weight:700;font-size:15px;font-family:'Syne',sans-serif;transition:opacity .2s}
+.btn-hero:hover{opacity:.85}
+
+/* SECTIONS */
+.site-section{padding:4rem 5%}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-heading{font-size:clamp(1.4rem,2.5vw,2rem);font-weight:800;margin-bottom:.5rem}
+.section-sub{color:var(--muted);margin-bottom:2.5rem;font-size:.95rem}
+.section-alt{background:#f9fafb}
+
+/* TEXT */
+.text-body{max-width:720px;font-size:1rem;line-height:1.8;color:#333}
+
+/* SERVICES GRID */
+.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem}
+.service-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:1.5rem}
+.service-card h3{font-size:1rem;font-weight:700;margin-bottom:.4rem;color:var(--text)}
+.service-card p{font-size:13.5px;color:var(--muted)}
+
+/* PRODUCTS */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.25rem}
+.product-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.product-img{height:160px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:2rem}
+.product-img img{width:100%;height:100%;object-fit:cover}
+.product-body{padding:1rem}
+.product-name{font-weight:700;font-size:.95rem;margin-bottom:.25rem}
+.product-desc{font-size:12.5px;color:var(--muted);margin-bottom:.75rem}
+.product-price{font-size:1.1rem;font-weight:800;color:var(--primary);margin-bottom:.75rem}
+.btn-cart{display:block;width:100%;text-align:center;background:var(--primary);color:#111;border:none;padding:.55rem;border-radius:7px;font-weight:700;font-size:13px;cursor:pointer;font-family:'Syne',sans-serif;transition:opacity .2s}
+.btn-cart:hover{opacity:.8}
+
+/* CART */
+.cart-bar{position:fixed;bottom:1.5rem;right:1.5rem;background:#111;color:#fff;padding:.75rem 1.25rem;border-radius:99px;display:flex;align-items:center;gap:.6rem;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:200;transition:transform .2s}
+.cart-bar:hover{transform:scale(1.05)}
+.cart-count{background:var(--primary);color:#111;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+
+/* PROJECTS */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.25rem}
+.project-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:1.5rem}
+.project-tag{display:inline-block;padding:.2rem .6rem;border-radius:99px;font-size:11px;font-weight:700;background:color-mix(in srgb,var(--primary) 15%,transparent);color:var(--primary);margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.04em}
+.project-card h3{font-weight:700;margin-bottom:.4rem}
+.project-card p{font-size:13.5px;color:var(--muted)}
+
+/* ADMISSIONS */
+.admissions-box{background:#fff;border:1.5px solid var(--border);border-radius:16px;padding:2rem;max-width:640px}
+.admissions-detail{display:flex;align-items:center;gap:.5rem;margin-top:.75rem;font-size:14px}
+
+/* CONTACT */
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem}
+.contact-item{display:flex;gap:.75rem}
+.contact-icon{width:42px;height:42px;border-radius:10px;background:color-mix(in srgb,var(--primary) 15%,transparent);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.contact-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;font-weight:600}
+.contact-value{font-size:14px;font-weight:500}
+
+/* FAQ */
+.faq-item{border-bottom:1px solid var(--border);padding:1rem 0}
+.faq-q{font-weight:700;margin-bottom:.35rem}
+.faq-a{color:var(--muted);font-size:14px}
+
+/* TEAM */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.25rem}
+.team-card{text-align:center;background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:1.5rem}
+.team-avatar{width:60px;height:60px;border-radius:50%;background:color-mix(in srgb,var(--primary) 20%,transparent);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin:0 auto .75rem}
+.team-name{font-weight:700;margin-bottom:.2rem}
+.team-role{font-size:13px;color:var(--primary);margin-bottom:.4rem;font-weight:600}
+.team-bio{font-size:12.5px;color:var(--muted)}
+
+/* FOOTER */
+.site-footer{background:#111;color:#aaa;text-align:center;padding:2rem 5%;font-size:13.5px}
+.site-footer strong{color:#fff}
+.footer-brand{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--primary);margin-bottom:.5rem}
+
+/* RESPONSIVE */
+@media(max-width:640px){.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div>${logoHtml}</div>
+  <div class="nav-links">
+    ${(site.sections||[]).map(s=>`<a href="#${s.id}">${escHtml(s.label||s.type)}</a>`).join('')}
+  </div>
+</nav>
+
+${sectionsHtml}
+
+<footer class="site-footer">
+  <div class="footer-brand">${escHtml(title)}</div>
+  <p>Built with <strong>Ocrown</strong> Website Builder · ${new Date().getFullYear()}</p>
+</footer>
+
+<script>
+// Simple cart system for store sites
+let cart = [];
+function addToCart(name, price){
+  cart.push({name,price});
+  updateCartBar();
+}
+function updateCartBar(){
+  let bar = document.getElementById('cart-bar');
+  if(!bar){
+    bar = document.createElement('div');
+    bar.id='cart-bar';
+    bar.className='cart-bar';
+    bar.onclick=checkoutCart;
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML = '🛒 Cart <span class="cart-count">'+cart.length+'</span>';
+}
+function checkoutCart(){
+  if(!cart.length){alert('Your cart is empty');return;}
+  const total = cart.reduce((s,i)=>{const n=parseFloat(i.price.replace(/[^0-9.]/g,''))||0;return s+n;},0);
+  alert('Checkout\\n\\nItems: '+cart.map(i=>i.name+' – '+i.price).join('\\n')+'\\n\\nTotal: ₦'+total.toLocaleString()+'\\n\\n(Paystack integration ready — connect your key to enable live payments)');
+}
+<\/script>
+</body>
+</html>`;
+}
+
+function renderSectionHtml(sec, primaryColor){
+  const id = sec.id;
+  switch(sec.type){
+    case 'hero': {
+      const d = sec.data||{};
+      const bgStyle = d.bgImage ? `background-image:url('${d.bgImage}')` : `background:${d.bgColor||'#1a1a2a'}`;
+      return `<section id="${id}" class="hero-sec">
+        <div class="hero-bg" style="${bgStyle}"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <h1>${escHtml(d.heading||'Welcome')}</h1>
+          <p>${escHtml(d.subheading||'')}</p>
+          ${d.buttonText?`<a href="${escHtml(d.buttonLink||'#')}" class="btn-hero">${escHtml(d.buttonText)}</a>`:''}
+        </div>
+      </section>`;
+    }
+    case 'text':
+    case 'about': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'')}</h2>
+          <div class="text-body">${escHtml(d.body||'').replace(/\n/g,'<br/>')}</div>
+        </div>
+      </section>`;
+    }
+    case 'services': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section section-alt">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'Services')}</h2>
+          <div class="services-grid">
+            ${(d.items||[]).map(i=>`<div class="service-card"><h3>${escHtml(i.title||'')}</h3><p>${escHtml(i.desc||'')}</p></div>`).join('')}
+          </div>
+        </div>
+      </section>`;
+    }
+    case 'products': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'Products')}</h2>
+          <div class="products-grid">
+            ${(d.items||[]).map(i=>`<div class="product-card">
+              <div class="product-img">${i.image?`<img src="${escHtml(i.image)}" alt="${escHtml(i.name||'')}"/>`:'📦'}</div>
+              <div class="product-body">
+                <div class="product-name">${escHtml(i.name||'')}</div>
+                <div class="product-desc">${escHtml(i.desc||'')}</div>
+                <div class="product-price">${escHtml(i.price||'')}</div>
+                <button class="btn-cart" onclick="addToCart('${escHtml(i.name||'')}','${escHtml(i.price||'')}')">Add to Cart</button>
+              </div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </section>`;
+    }
+    case 'projects': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section section-alt">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'Projects')}</h2>
+          <div class="projects-grid">
+            ${(d.items||[]).map(i=>`<div class="project-card">
+              <span class="project-tag">${escHtml(i.tag||'')}</span>
+              <h3>${escHtml(i.title||'')}</h3>
+              <p>${escHtml(i.desc||'')}</p>
+            </div>`).join('')}
+          </div>
+        </div>
+      </section>`;
+    }
+    case 'admissions': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'Admissions')}</h2>
+          <div class="admissions-box">
+            <p style="color:#555;line-height:1.7">${escHtml(d.body||'').replace(/\n/g,'<br/>')}</p>
+            ${d.deadline?`<div class="admissions-detail">📅 <strong>Deadline:</strong> ${escHtml(d.deadline)}</div>`:''}
+            ${d.contactEmail?`<div class="admissions-detail">✉️ <strong>Contact:</strong> <a href="mailto:${escHtml(d.contactEmail)}">${escHtml(d.contactEmail)}</a></div>`:''}
+          </div>
+        </div>
+      </section>`;
+    }
+    case 'contact': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section section-alt">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'Contact Us')}</h2>
+          <div class="contact-grid">
+            ${d.phone?`<div class="contact-item"><div class="contact-icon">📞</div><div><div class="contact-label">Phone</div><div class="contact-value">${escHtml(d.phone)}</div></div></div>`:''}
+            ${d.email?`<div class="contact-item"><div class="contact-icon">✉️</div><div><div class="contact-label">Email</div><div class="contact-value"><a href="mailto:${escHtml(d.email)}">${escHtml(d.email)}</a></div></div></div>`:''}
+            ${d.address?`<div class="contact-item"><div class="contact-icon">📍</div><div><div class="contact-label">Address</div><div class="contact-value">${escHtml(d.address)}</div></div></div>`:''}
+          </div>
+        </div>
+      </section>`;
+    }
+    case 'faq': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'FAQ')}</h2>
+          ${(d.items||[]).map(i=>`<div class="faq-item"><div class="faq-q">${escHtml(i.q||'')}</div><div class="faq-a">${escHtml(i.a||'')}</div></div>`).join('')}
+        </div>
+      </section>`;
+    }
+    case 'team': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section section-alt">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'Our Team')}</h2>
+          <div class="team-grid">
+            ${(d.items||[]).map(i=>`<div class="team-card">
+              <div class="team-avatar">👤</div>
+              <div class="team-name">${escHtml(i.name||'')}</div>
+              <div class="team-role">${escHtml(i.role||'')}</div>
+              <div class="team-bio">${escHtml(i.bio||'')}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </section>`;
+    }
+    case 'gallery': {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||'Gallery')}</h2>
+          <p style="color:#999">Gallery images can be added via the editor.</p>
+        </div>
+      </section>`;
+    }
+    default: {
+      const d = sec.data||{};
+      return `<section id="${id}" class="site-section">
+        <div class="section-inner">
+          <h2 class="section-heading">${escHtml(d.heading||sec.label||'Section')}</h2>
+          <div class="text-body">${escHtml(d.body||'').replace(/\n/g,'<br/>')}</div>
+        </div>
+      </section>`;
+    }
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function escHtml(str){
+  if(!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+window.escHtml = escHtml;
+
+// Add slug sync in settings
+document.getElementById('settings-slug')?.addEventListener('input', e=>{
+  document.getElementById('slug-preview').textContent = e.target.value||'my-site';
+  markDirty();
+});
+
+// Keyboard shortcut: Ctrl+S to save
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){
+    e.preventDefault();
+    const builderPage = document.getElementById('page-builder');
+    if(builderPage && !builderPage.classList.contains('hidden')) saveWebsite();
+  }
+});
+
+// Init
+console.log('%cOcrown Website Builder','color:#6ee7b7;font-size:1.2em;font-weight:bold');
+console.log('Firebase project: ocrownveterinary');
+</script>
+</body>
+</html>
