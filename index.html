@@ -661,14 +661,14 @@ select.form-control{appearance:none;cursor:pointer}
   </div>
 </div>
 
-<!-- ═══════════════════ FIREBASE & APP SCRIPTS ══════════════════════ -->
-<script type="module">
-// ── FIREBASE SETUP ────────────────────────────────────────────────
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, deleteDoc, updateDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+<!-- ═══════════════════ FIREBASE COMPAT SDK (works on GitHub Pages) ═ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
+<script>
+// ── FIREBASE SETUP ────────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyAozsH2cIlpor-X9kCQIMsfCPIRNPRPosQ",
   authDomain: "ocrownveterinary.firebaseapp.com",
@@ -679,10 +679,21 @@ const firebaseConfig = {
   appId: "1:946404927243:web:c0c873e6a3b5d0b18ea40e"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+// Guard: only initialize once
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// Safety timeout: if Firebase doesn't respond in 8s, show landing page
+const _fbTimeout = setTimeout(() => {
+  const loader = document.getElementById('page-loading');
+  if (loader && !loader.classList.contains('hidden')) {
+    loader.classList.add('hidden');
+    document.getElementById('page-landing').classList.remove('hidden');
+    console.warn('Firebase auth timeout — showing landing page');
+  }
+}, 8000);
 
 // ── APP STATE ─────────────────────────────────────────────────────
 let currentUser = null;
@@ -796,7 +807,7 @@ async function handleLogin(){
   const btn = document.getElementById('btn-login');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Signing in…';
   try{
-    await signInWithEmailAndPassword(auth, email, pwd);
+    await auth.signInWithEmailAndPassword(email, pwd);
   }catch(e){
     toast(e.message,'error');
     btn.disabled=false; btn.innerHTML='Sign In';
@@ -815,10 +826,10 @@ async function handleSignup(){
   const btn = document.getElementById('btn-signup');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Creating account…';
   try{
-    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
-    await setDoc(doc(db,'users',cred.user.uid),{
+    const cred = await auth.createUserWithEmailAndPassword(email, pwd);
+    await db.collection('users').doc(cred.user.uid).set({
       firstName:fname, lastName:lname, username, email,
-      createdAt:serverTimestamp(), plan:'free'
+      createdAt:firebase.firestore.FieldValue.serverTimestamp(), plan:'free'
     });
     toast('Account created! Welcome to Ocrown 🎉','success');
   }catch(e){
@@ -829,19 +840,20 @@ async function handleSignup(){
 window.handleSignup = handleSignup;
 
 async function handleLogout(){
-  await signOut(auth);
+  await auth.signOut();
   showPage('landing');
   toast('Signed out successfully','info');
 }
 window.handleLogout = handleLogout;
 
 // ── AUTH STATE OBSERVER ───────────────────────────────────────────
-onAuthStateChanged(auth, async user=>{
+auth.onAuthStateChanged(async user=>{
+  clearTimeout(_fbTimeout); // cancel the safety timeout
   if(user){
     currentUser = user;
     try{
-      const snap = await getDoc(doc(db,'users',user.uid));
-      currentUserData = snap.exists() ? snap.data() : {email:user.email, username:'user', firstName:'', lastName:''};
+      const snap = await db.collection('users').doc(user.uid).get();
+      currentUserData = snap.exists ? snap.data() : {email:user.email, username:'user', firstName:'', lastName:''};
     }catch(e){
       currentUserData = {email:user.email, username:'user', firstName:'', lastName:''};
     }
@@ -882,14 +894,14 @@ window.loadDashboard = loadDashboard;
 
 async function fetchUserSites(){
   try{
-    const q = query(collection(db,'websites'), where('ownerId','==',currentUser.uid), orderBy('updatedAt','desc'));
-    const snap = await getDocs(q);
+    const snap = await db.collection('websites')
+      .where('ownerId','==',currentUser.uid)
+      .orderBy('updatedAt','desc')
+      .get();
     return snap.docs.map(d=>({id:d.id,...d.data()}));
   }catch(e){
-    // Fallback if index not created
     try{
-      const q2 = query(collection(db,'websites'), where('ownerId','==',currentUser.uid));
-      const snap2 = await getDocs(q2);
+      const snap2 = await db.collection('websites').where('ownerId','==',currentUser.uid).get();
       return snap2.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0));
     }catch(e2){
       return [];
@@ -973,7 +985,7 @@ async function createNewWebsite(){
   sections.forEach((s,i)=>{s.id=`section-${Date.now()}-${i}`;});
 
   try{
-    const siteRef = doc(collection(db,'websites'));
+    const siteRef = db.collection('websites').doc();
     const siteData = {
       title, slug, type,
       ownerId: currentUser.uid,
@@ -984,10 +996,10 @@ async function createNewWebsite(){
       primaryColor: TEMPLATE_COLORS[type]||'#6ee7b7',
       logoUrl: '',
       bannerUrl: '',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    await setDoc(siteRef, siteData);
+    await siteRef.set(siteData);
     toast(`"${title}" created!`,'success');
     closeModal('modal-new-website');
     await openBuilder(siteRef.id);
@@ -999,8 +1011,8 @@ window.createNewWebsite = createNewWebsite;
 
 // ── BUILDER ───────────────────────────────────────────────────────
 async function openBuilder(siteId){
-  const snap = await getDoc(doc(db,'websites',siteId));
-  if(!snap.exists()){toast('Website not found','error');return;}
+  const snap = await db.collection('websites').doc(siteId).get();
+  if(!snap.exists){toast('Website not found','error');return;}
   currentWebsite = {id:siteId,...snap.data()};
   isDirty = false;
 
@@ -1199,9 +1211,9 @@ window.handleImageUpload = async function(event, sectionId, field){
   if(!file||!currentUser) return;
   toast('Uploading image…','info');
   try{
-    const storageRef = ref(storage, `users/${currentUser.uid}/images/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
+    const storageRef = storage.ref(`users/${currentUser.uid}/images/${Date.now()}_${file.name}`);
+    await storageRef.put(file);
+    const url = await storageRef.getDownloadURL();
     if(sectionId==='global'){
       currentWebsite.logoUrl = url;
     }else{
@@ -1274,13 +1286,13 @@ async function saveWebsite(){
   currentWebsite.slug = slug;
   currentWebsite.primaryColor = color;
   try{
-    await updateDoc(doc(db,'websites',currentWebsite.id),{
+    await db.collection('websites').doc(currentWebsite.id).update({
       title:currentWebsite.title,
       slug,
       sections: currentWebsite.sections,
       logoUrl: currentWebsite.logoUrl||'',
       primaryColor: color,
-      updatedAt: serverTimestamp()
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     isDirty = false;
     toast('Website saved!','success');
@@ -1294,9 +1306,9 @@ async function publishWebsite(){
   if(!currentWebsite) return;
   await saveWebsite();
   try{
-    await updateDoc(doc(db,'websites',currentWebsite.id),{
+    await db.collection('websites').doc(currentWebsite.id).update({
       published: true,
-      publishedAt: serverTimestamp(),
+      publishedAt: firebase.firestore.FieldValue.serverTimestamp(),
       publishedHtml: generateSiteHTML(currentWebsite)
     });
     currentWebsite.published = true;
@@ -1334,8 +1346,8 @@ window.viewPublishedSite = viewPublishedSite;
 
 function openLiveSite(siteId){
   // Open live site HTML in new tab
-  getDoc(doc(db,'websites',siteId)).then(snap=>{
-    if(snap.exists()){
+  db.collection('websites').doc(siteId).get().then(snap=>{
+    if(snap.exists){
       const site = {id:siteId,...snap.data()};
       const html = generateSiteHTML(site);
       const blob = new Blob([html],{type:'text/html'});
@@ -1357,7 +1369,7 @@ window.promptDeleteWebsite = promptDeleteWebsite;
 async function confirmDeleteWebsite(){
   if(!deletePendingSiteId) return;
   try{
-    await deleteDoc(doc(db,'websites',deletePendingSiteId));
+    await db.collection('websites').doc(deletePendingSiteId).delete();
     toast('Website deleted','info');
     closeModal('modal-delete');
     loadDashboard();
