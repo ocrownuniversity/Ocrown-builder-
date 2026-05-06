@@ -325,27 +325,33 @@ function renderProducts(){
     var imgHtml=p.img
       ?'<img src="'+p.img+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">'
       :'<span style="font-size:68px;">'+p.emoji+'</span>';
-    h+='<div class="pc page-fade">';
-    if(p.bonus)h+='<div class="pbns">+20% BONUS</div>';
-    if(p.badge)h+='<div class="pbdg b-'+p.bc+'">'+p.badge+'</div>';
+    h+='<div class="pc page-fade" data-pid="'+p.id+'">';
+    if(p.bonus)h+='<div class="pbns" onclick="openDetailById('+p.id+')">+20% BONUS</div>';
+    if(p.badge)h+='<div class="pbdg b-'+p.bc+'" onclick="openDetailById('+p.id+')">'+p.badge+'</div>';
     var isWished=wishlist.indexOf(p.id)!==-1;
     h+='<button class="wishlist-btn'+(isWished?' active':'')+'" onclick="event.stopPropagation();toggleWishlist('+p.id+')" title="Wishlist">'+(isWished?'&#10084;':'&#9825;')+'</button>';
-    h+='<div class="pimg" onclick="openDetail('+p.id+');addToRecent('+p.id+')">'+imgHtml+'</div>';
+    h+='<div class="pimg" onclick="openDetailById('+p.id+')">'+imgHtml+'</div>';
     h+='<div class="pinf">';
-    h+='<div class="pname" onclick="openDetail('+p.id+');addToRecent('+p.id+')" style="cursor:pointer;">'+p.name+'</div>';
+    h+='<div class="pname" onclick="openDetailById('+p.id+')" style="cursor:pointer;">'+p.name+'</div>';
     h+='<div class="pprice">&#8358;'+N(p.price)+'</div>';
     h+='<div class="pold"><span class="pstr">&#8358;'+N(p.old)+'</span> <span class="pdsc">-'+d+'%</span></div>';
-    if(p.bonus)h+='<div class="pbonus">&#127873; +20% Cashback</div>';
-    if(p.desc)h+='<div class="pdesc-short">'+p.desc.substring(0,60)+(p.desc.length>60?"...":"")+'</div>';
+    if(p.bonus)h+='<div class="pbonus" onclick="openDetailById('+p.id+')">&#127873; +20% Cashback</div>';
+    if(p.desc)h+='<div class="pdesc-short" onclick="openDetailById('+p.id+')">'+p.desc.substring(0,60)+(p.desc.length>60?"...":"")+'</div>';
     h+='<div class="prat">'+stars(Math.floor(p.rating))+' <span class="prev">('+p.reviews+')</span></div>';
     h+='<div class="pcard-btns">';
     h+='<button class="pcard-atc" onclick="event.stopPropagation();quickAddToCart('+p.id+',this)">&#128722; Add to Cart</button>';
     h+='<button class="pcard-buy" onclick="event.stopPropagation();quickBuyNow('+p.id+',this)">&#9889; Buy Now</button>';
     h+='</div>';
-    h+='<button class="pcard-view" onclick="openDetail('+p.id+');addToRecent('+p.id+')">&#128065; View Description</button>';
+    h+='<button class="pcard-view" onclick="event.stopPropagation();openDetailById('+p.id+')">&#128065; View Description</button>';
     h+='</div></div>';
   }
   g.innerHTML=h;
+}
+
+// Single reliable function to open detail — used everywhere on product cards
+function openDetailById(id){
+  if(typeof addToRecent==='function') addToRecent(id);
+  openDetail(id);
 }
 function openDetail(id){
   var p=null;
@@ -4673,64 +4679,8 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   // ---------- PRODUCT CLICK FIX ----------
-  // Use event delegation on prodGrid — fires for ANY click on a .pc card
-  // that is NOT on a button element
-  var grid = document.getElementById('prodGrid');
-  if(grid){
-    grid.addEventListener('click', function(e){
-      // Ignore button clicks — they have their own handlers
-      if(e.target.tagName === 'BUTTON') return;
-      var btn = e.target.closest ? e.target.closest('button') : null;
-      if(btn) return;
-
-      // Find the parent .pc card
-      var card = e.target.closest ? e.target.closest('.pc') : null;
-      if(!card) return;
-
-      // Stop any duplicate events
-      e.stopPropagation();
-
-      // Get product id from any onclick="openDetail(X)" attribute on the card
-      var allEls = card.querySelectorAll('[onclick]');
-      for(var i = 0; i < allEls.length; i++){
-        var oc = allEls[i].getAttribute('onclick') || '';
-        var m = oc.match(/openDetail\((\d+)\)/);
-        if(m){
-          var pid = parseInt(m[1]);
-          openDetail(pid);
-          if(typeof addToRecent === 'function') addToRecent(pid);
-          return;
-        }
-      }
-      // Fallback: check the card itself
-      var cardOC = card.getAttribute('onclick') || '';
-      var cardM = cardOC.match(/openDetail\((\d+)\)/);
-      if(cardM){
-        openDetail(parseInt(cardM[1]));
-      }
-    }, true); // capture phase so it fires before inline handlers stop it
-  }
-
-  // Also ensure "View Description" button always works by patching pcard-view buttons
-  // via document-level delegation
-  document.addEventListener('click', function(e){
-    var btn = e.target;
-    if(!btn) return;
-    // Match View Description button
-    if(btn.className && typeof btn.className === 'string' && btn.className.indexOf('pcard-view') !== -1){
-      var oc = btn.getAttribute('onclick') || '';
-      var m = oc.match(/openDetail\((\d+)\)/);
-      if(m){
-        e.preventDefault();
-        e.stopPropagation();
-        openDetail(parseInt(m[1]));
-        if(typeof addToRecent === 'function'){
-          var m2 = oc.match(/addToRecent\((\d+)\)/);
-          if(m2) addToRecent(parseInt(m2[1]));
-        }
-      }
-    }
-  });
+  // openDetailById() in renderProducts handles all card clicks directly.
+  // No delegation needed - each element has its own onclick.
 
 }); // end DOMContentLoaded
 
