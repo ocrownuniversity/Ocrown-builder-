@@ -3408,5 +3408,976 @@ document.addEventListener("DOMContentLoaded",function(){
 });
 </script>
 
+<!-- ════════════════════════════════════════════════════════════════
+     NEW PROFESSIONAL FEATURES — BENIM TRADE
+     1. Live Chat / WhatsApp Floating Button (with pulse)
+     2. Back-to-Top Button
+     3. Coupon Code System
+     4. Product Image Zoom on Hover (detail view)
+     5. Newsletter Signup (footer email capture → Firebase)
+     6. Customer Reviews on Product Detail
+     7. Size Guide Modal
+     8. Social Share buttons on product detail
+     9. Notification Bell (new arrivals alert)
+    10. Dark Mode Toggle
+    11. Flash Sales Countdown Banner (persistent)
+    12. "Recently Viewed" persistent storage fix
+    13. Sticky Cart Summary bar (shows total when items in cart)
+    14. Admin: Export Orders to CSV
+    15. Scroll Progress Bar
+════════════════════════════════════════════════════════════════ -->
+
+<!-- ═══════════════ NEW FEATURES CSS ═══════════════ -->
+<style>
+
+/* ─── 1. Floating WhatsApp / Chat Button ─── */
+.float-wa-btn {
+  position: fixed; bottom: 80px; right: 18px; z-index: 9990;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #25D366; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(37,211,102,.5);
+  animation: waPulse 2s infinite;
+  transition: transform .2s;
+}
+.float-wa-btn:hover { transform: scale(1.12); }
+.float-wa-btn svg { width: 28px; height: 28px; fill: #fff; }
+@keyframes waPulse {
+  0%,100%{ box-shadow:0 4px 20px rgba(37,211,102,.5); }
+  50%{ box-shadow:0 4px 36px rgba(37,211,102,.8); }
+}
+.float-wa-tooltip {
+  position: absolute; right: 66px; background: #0d2b18;
+  color: #fff; font-family: Nunito,sans-serif; font-size: 12px;
+  font-weight: 800; padding: 6px 12px; border-radius: 20px;
+  white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.float-wa-btn:hover .float-wa-tooltip { opacity: 1; }
+
+/* ─── 2. Back to Top ─── */
+.back-to-top {
+  position: fixed; bottom: 18px; right: 18px; z-index: 9990;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: #1a3a8b; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(26,58,139,.4);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .3s, transform .3s;
+  color: #fff; font-size: 18px;
+}
+.back-to-top.show { opacity: 1; transform: translateY(0); }
+.back-to-top:hover { background: #2c55c7; }
+
+/* ─── 3. Coupon Code ─── */
+.coupon-section {
+  background: linear-gradient(135deg,#fff7e0,#fffdf5);
+  border: 2px dashed #e8b44a; border-radius: 12px;
+  padding: 14px 16px; margin-bottom: 14px;
+}
+.coupon-label {
+  font-family: Nunito,sans-serif; font-size: 11px;
+  font-weight: 800; color: #7a4a00; text-transform: uppercase;
+  letter-spacing: .1em; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.coupon-row { display: flex; gap: 8px; }
+.coupon-input {
+  flex: 1; font-family: Lato,sans-serif; font-size: 13px;
+  border: 2px solid #e8b44a; padding: 9px 12px;
+  border-radius: 8px; outline: none; letter-spacing: 2px;
+  font-weight: 700; text-transform: uppercase;
+  background: #fff;
+}
+.coupon-input:focus { border-color: #c9972a; }
+.coupon-apply-btn {
+  background: #e8b44a; color: #fff; border: none;
+  padding: 9px 16px; border-radius: 8px;
+  font-family: Nunito,sans-serif; font-size: 12px;
+  font-weight: 900; cursor: pointer; transition: background .2s;
+  white-space: nowrap;
+}
+.coupon-apply-btn:hover { background: #c9972a; }
+.coupon-msg {
+  font-family: Nunito,sans-serif; font-size: 12px;
+  font-weight: 700; margin-top: 7px; display: none;
+}
+.coupon-msg.ok { color: #1a6b3c; display: block; }
+.coupon-msg.err { color: #c0392b; display: block; }
+.coupon-saving {
+  background: #1a6b3c; color: #fff; border-radius: 6px;
+  padding: 6px 12px; font-family: Nunito,sans-serif;
+  font-size: 12px; font-weight: 800; margin-top: 6px;
+  display: none;
+}
+.coupon-saving.show { display: block; }
+
+/* ─── 4. Image Zoom ─── */
+.dimg-big { overflow: hidden; cursor: zoom-in; }
+.dimg-big img {
+  transition: transform .4s ease;
+  transform-origin: center center;
+}
+.dimg-big:hover img { transform: scale(1.15); cursor: zoom-in; }
+
+/* ─── 5. Newsletter ─── */
+.newsletter-section {
+  background: linear-gradient(135deg,#1a3a8b,#0d2b18);
+  padding: 36px 16px; text-align: center;
+}
+.newsletter-inner { max-width: 500px; margin: 0 auto; }
+.newsletter-icon { font-size: 36px; margin-bottom: 8px; }
+.newsletter-title {
+  font-family: Nunito,sans-serif; font-size: 20px;
+  font-weight: 900; color: #fff; margin-bottom: 6px;
+}
+.newsletter-sub {
+  font-family: Nunito,sans-serif; font-size: 13px;
+  color: rgba(255,255,255,.55); margin-bottom: 18px;
+}
+.newsletter-form { display: flex; gap: 8px; max-width: 400px; margin: 0 auto; }
+.newsletter-input {
+  flex: 1; font-family: Lato,sans-serif; font-size: 13px;
+  border: none; padding: 12px 16px; border-radius: 8px;
+  outline: none;
+}
+.newsletter-btn {
+  background: #e8b44a; color: #fff; border: none;
+  padding: 12px 20px; border-radius: 8px;
+  font-family: Nunito,sans-serif; font-size: 13px;
+  font-weight: 900; cursor: pointer; transition: background .2s;
+  white-space: nowrap;
+}
+.newsletter-btn:hover { background: #c9972a; }
+.newsletter-success {
+  color: #e8b44a; font-family: Nunito,sans-serif;
+  font-size: 14px; font-weight: 800; display: none;
+  margin-top: 10px;
+}
+.newsletter-success.show { display: block; }
+
+/* ─── 6. Reviews ─── */
+.reviews-section { padding: 20px 0 0; border-top: 1px solid #eee; margin-top: 16px; }
+.reviews-title {
+  font-family: Nunito,sans-serif; font-size: 15px;
+  font-weight: 900; color: #1a3a8b; margin-bottom: 14px;
+}
+.review-card {
+  background: #f8f9ff; border-radius: 10px; padding: 12px 14px;
+  margin-bottom: 10px; border-left: 3px solid #1a3a8b;
+}
+.review-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.review-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg,#1a3a8b,#1a6b3c);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-family: Nunito,sans-serif; font-size: 14px;
+  font-weight: 900; flex-shrink: 0;
+}
+.review-name {
+  font-family: Nunito,sans-serif; font-size: 13px; font-weight: 800;
+}
+.review-date { font-size: 11px; color: #aaa; margin-left: auto; }
+.review-stars { color: #e8b44a; font-size: 13px; margin-bottom: 5px; }
+.review-text { font-size: 12px; color: #555; line-height: 1.7; }
+.review-verified {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 800; color: #1a6b3c;
+  background: #f0faf5; padding: 2px 8px; border-radius: 10px;
+  margin-top: 6px;
+}
+.add-review-btn {
+  width: 100%; background: transparent; border: 2px solid #1a3a8b;
+  color: #1a3a8b; padding: 10px; border-radius: 8px;
+  font-family: Nunito,sans-serif; font-size: 12px; font-weight: 800;
+  cursor: pointer; margin-top: 8px; transition: all .2s;
+}
+.add-review-btn:hover { background: #1a3a8b; color: #fff; }
+
+/* Review form */
+.review-form {
+  background: #f8f9ff; border-radius: 10px; padding: 14px;
+  margin-top: 10px; display: none;
+}
+.review-form.show { display: block; }
+.review-form textarea {
+  width: 100%; border: 1.5px solid #ddd; padding: 10px;
+  border-radius: 8px; font-family: Lato,sans-serif; font-size: 13px;
+  resize: vertical; min-height: 80px; outline: none;
+}
+.review-form textarea:focus { border-color: #1a3a8b; }
+.review-stars-select { display: flex; gap: 6px; margin: 10px 0; }
+.rstar-btn {
+  font-size: 22px; cursor: pointer; color: #ddd;
+  transition: color .15s; background: none; border: none;
+  padding: 0;
+}
+.rstar-btn.on { color: #e8b44a; }
+.review-submit {
+  background: #1a3a8b; color: #fff; border: none;
+  padding: 10px 20px; border-radius: 8px;
+  font-family: Nunito,sans-serif; font-size: 12px; font-weight: 800;
+  cursor: pointer; margin-top: 8px;
+}
+
+/* ─── 7. Size Guide Modal ─── */
+.size-guide-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.8); z-index: 99997;
+  align-items: center; justify-content: center; padding: 16px;
+}
+.size-guide-overlay.open { display: flex; }
+.size-guide-box {
+  background: #fff; border-radius: 14px;
+  max-width: 560px; width: 100%;
+  max-height: 90vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+.sg-head {
+  background: linear-gradient(135deg,#1a3a8b,#2c55c7);
+  padding: 16px 20px; display: flex;
+  align-items: center; justify-content: space-between;
+}
+.sg-head-title {
+  font-family: Nunito,sans-serif; font-size: 15px;
+  font-weight: 900; color: #fff;
+}
+.sg-body { padding: 20px; overflow-y: auto; }
+.sg-table {
+  width: 100%; border-collapse: collapse;
+  font-family: Nunito,sans-serif; font-size: 13px;
+}
+.sg-table th {
+  background: #1a3a8b; color: #fff; padding: 10px 12px;
+  text-align: left; font-weight: 800; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.sg-table td {
+  padding: 9px 12px; border-bottom: 1px solid #f0f0f0;
+  font-weight: 600; color: #333;
+}
+.sg-table tr:nth-child(even) td { background: #f8f9ff; }
+.sg-note {
+  font-family: Nunito,sans-serif; font-size: 11px;
+  color: #888; margin-top: 12px; line-height: 1.7;
+}
+.size-guide-link {
+  font-size: 11px; color: #1a3a8b; cursor: pointer;
+  font-weight: 800; text-decoration: underline;
+  margin-left: 8px; font-family: Nunito,sans-serif;
+}
+
+/* ─── 8. Social Share ─── */
+.social-share-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin: 12px 0; align-items: center;
+}
+.share-label {
+  font-family: Nunito,sans-serif; font-size: 11px;
+  font-weight: 800; color: #888; text-transform: uppercase;
+  letter-spacing: .08em; flex-shrink: 0;
+}
+.share-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 20px; border: none;
+  font-family: Nunito,sans-serif; font-size: 11px;
+  font-weight: 800; cursor: pointer; transition: all .2s;
+}
+.share-wa { background: #dcfce7; color: #166534; }
+.share-wa:hover { background: #25D366; color: #fff; }
+.share-copy { background: #f0f4ff; color: #1a3a8b; }
+.share-copy:hover { background: #1a3a8b; color: #fff; }
+.share-fb { background: #e8f0fe; color: #1877f2; }
+.share-fb:hover { background: #1877f2; color: #fff; }
+
+/* ─── 9. Notification Bell ─── */
+.notif-bell-btn {
+  position: relative; background: rgba(255,255,255,.15);
+  border: none; color: #fff; width: 36px; height: 36px;
+  border-radius: 50%; cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s; flex-shrink: 0;
+}
+.notif-bell-btn:hover { background: rgba(255,255,255,.25); }
+.notif-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 8px; height: 8px; background: #c0392b;
+  border-radius: 50%; border: 2px solid #1a3a8b;
+  display: none;
+}
+.notif-dot.show { display: block; }
+.notif-panel {
+  position: fixed; top: 62px; right: 16px;
+  background: #fff; border-radius: 14px; width: 300px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2); z-index: 9999;
+  display: none; overflow: hidden;
+}
+.notif-panel.open { display: block; animation: fadeSlideDown .2s ease; }
+@keyframes fadeSlideDown {
+  from{opacity:0;transform:translateY(-10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.notif-head {
+  background: linear-gradient(135deg,#1a3a8b,#2c55c7);
+  padding: 12px 16px; display: flex;
+  align-items: center; justify-content: space-between;
+}
+.notif-head-title {
+  font-family: Nunito,sans-serif; font-size: 13px;
+  font-weight: 900; color: #fff;
+}
+.notif-body { max-height: 280px; overflow-y: auto; }
+.notif-item {
+  padding: 12px 14px; border-bottom: 1px solid #f0f0f0;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.notif-item-icon { font-size: 20px; flex-shrink: 0; }
+.notif-item-text {
+  font-family: Nunito,sans-serif; font-size: 12px;
+  color: #333; line-height: 1.5;
+}
+.notif-item-time {
+  font-size: 10px; color: #aaa; margin-top: 3px;
+}
+.notif-empty {
+  padding: 24px 16px; text-align: center;
+  font-family: Nunito,sans-serif; font-size: 13px; color: #aaa;
+}
+
+/* ─── 10. Dark Mode ─── */
+.dark-mode-toggle {
+  background: rgba(255,255,255,.15); border: none;
+  color: #fff; width: 36px; height: 36px;
+  border-radius: 50%; cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s; flex-shrink: 0;
+}
+.dark-mode-toggle:hover { background: rgba(255,255,255,.25); }
+
+body.dark-mode {
+  background: #111 !important;
+  color: #e0e0e0 !important;
+}
+body.dark-mode .pc,
+body.dark-mode .auth-box,
+body.dark-mode .cart-panel,
+body.dark-mode .order-box,
+body.dark-mode .admin-box,
+body.dark-mode .track-box,
+body.dark-mode .size-guide-box {
+  background: #1e1e1e !important; color: #e0e0e0 !important;
+}
+body.dark-mode .trustbar,
+body.dark-mode .sec-head { background: #1e1e1e !important; }
+body.dark-mode .prod-wrap { background: #333 !important; }
+body.dark-mode .pinf,
+body.dark-mode .pname { color: #e0e0e0 !important; }
+body.dark-mode .af input,
+body.dark-mode .af textarea,
+body.dark-mode .track-input,
+body.dark-mode .coupon-input,
+body.dark-mode .newsletter-input {
+  background: #2a2a2a !important; color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+body.dark-mode .aorder,
+body.dark-mode .witem { background: #2a2a2a !important; }
+body.dark-mode .admin-body { background: #1e1e1e !important; }
+body.dark-mode .osummary,
+body.dark-mode .paybox { background: #2a2a2a !important; }
+body.dark-mode .review-card,
+body.dark-mode .track-info-item,
+body.dark-mode .track-items-list { background: #2a2a2a !important; }
+body.dark-mode .newsletter-section { background: linear-gradient(135deg,#0d1a3a,#061910) !important; }
+body.dark-mode .promo-banner { background: linear-gradient(135deg,#6b1a0a,#4a0d0d) !important; }
+body.dark-mode .footer { background: #0a0a0a !important; }
+
+/* ─── 11. Flash sale banner (permanent) already in body; upgrade just adds persistence ─── */
+
+/* ─── 13. Sticky Cart Bar ─── */
+.sticky-cart-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(135deg,#1a3a8b,#0d2b18);
+  padding: 12px 16px; z-index: 9985;
+  display: none; align-items: center;
+  justify-content: space-between; gap: 12px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.3);
+}
+.sticky-cart-bar.show { display: flex; }
+.scb-info {
+  font-family: Nunito,sans-serif; color: #fff;
+  font-size: 13px; font-weight: 800;
+}
+.scb-total {
+  font-size: 18px; color: #e8b44a;
+  font-weight: 900;
+}
+.scb-btn {
+  background: #e8b44a; color: #fff; border: none;
+  padding: 10px 22px; border-radius: 8px;
+  font-family: Nunito,sans-serif; font-size: 13px;
+  font-weight: 900; cursor: pointer; flex-shrink: 0;
+  transition: background .2s;
+}
+.scb-btn:hover { background: #c9972a; }
+.scb-close {
+  background: rgba(255,255,255,.15); border: none;
+  color: #fff; width: 30px; height: 30px;
+  border-radius: 50%; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ─── 15. Scroll Progress Bar ─── */
+.scroll-progress {
+  position: fixed; top: 0; left: 0; height: 3px;
+  background: linear-gradient(90deg,#e8b44a,#c0392b,#1a3a8b);
+  z-index: 99999; width: 0%; transition: width .1s;
+  pointer-events: none;
+}
+
+/* ─── CSV Export Button ─── */
+.export-csv-btn {
+  font-family: Nunito,sans-serif; font-size: 11px; font-weight: 800;
+  background: #f0f4ff; color: #1a3a8b; border: 2px solid #1a3a8b;
+  padding: 7px 14px; border-radius: 6px; cursor: pointer;
+  transition: all .2s; display: inline-flex; align-items: center; gap: 5px;
+}
+.export-csv-btn:hover { background: #1a3a8b; color: #fff; }
+
+/* ─── Misc responsive additions ─── */
+@media(max-width:600px){
+  .newsletter-form { flex-direction: column; }
+  .newsletter-btn { width: 100%; }
+  .sticky-cart-bar { padding: 10px 12px; }
+  .scb-info { font-size: 12px; }
+  .notif-panel { right: 8px; width: calc(100vw - 16px); }
+}
+</style>
+
+<!-- ═══════════════ NEW HTML ELEMENTS ═══════════════ -->
+
+<!-- Scroll Progress Bar -->
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- Floating WhatsApp Button -->
+<a href="https://wa.me/2349168031213?text=Hello%20BENIM_TRADE!%20I%20need%20help%20with%20shopping." target="_blank" class="float-wa-btn" title="Chat on WhatsApp">
+  <div class="float-wa-tooltip">Chat with us on WhatsApp</div>
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </svg>
+</a>
+
+<!-- Back to Top Button -->
+<button class="back-to-top" id="backToTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+
+<!-- Sticky Cart Bar -->
+<div class="sticky-cart-bar" id="stickyCartBar">
+  <div class="scb-info">
+    <div>🛒 <span id="scbCount">0</span> item(s) in cart</div>
+    <div class="scb-total">₦<span id="scbTotal">0</span></div>
+  </div>
+  <button class="scb-btn" onclick="closeCartBar();openCart()">View Cart & Checkout →</button>
+  <button class="scb-close" onclick="closeCartBar()" title="Close">✕</button>
+</div>
+
+<!-- Size Guide Modal -->
+<div class="size-guide-overlay" id="sizeGuideOverlay">
+  <div class="size-guide-box">
+    <div class="sg-head">
+      <div class="sg-head-title">📏 Size Guide — BENIM Trade</div>
+      <button onclick="closeSizeGuide()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div class="sg-body">
+      <div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:800;color:#1a3a8b;margin-bottom:12px;">👕 Tops & Shirts (Men)</div>
+      <table class="sg-table">
+        <tr><th>Size</th><th>Chest (cm)</th><th>Waist (cm)</th><th>Length (cm)</th></tr>
+        <tr><td>S</td><td>88–92</td><td>76–80</td><td>68</td></tr>
+        <tr><td>M</td><td>93–97</td><td>81–85</td><td>70</td></tr>
+        <tr><td>L</td><td>98–102</td><td>86–90</td><td>72</td></tr>
+        <tr><td>XL</td><td>103–108</td><td>91–96</td><td>74</td></tr>
+        <tr><td>XXL</td><td>109–115</td><td>97–103</td><td>76</td></tr>
+      </table>
+      <div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:800;color:#1a3a8b;margin:16px 0 12px;">👖 Trousers & Jeans (Men)</div>
+      <table class="sg-table">
+        <tr><th>Waist Size</th><th>Waist (cm)</th><th>Hip (cm)</th><th>Inseam (cm)</th></tr>
+        <tr><td>28</td><td>71–73</td><td>86–88</td><td>76</td></tr>
+        <tr><td>30</td><td>76–78</td><td>91–93</td><td>78</td></tr>
+        <tr><td>32</td><td>81–83</td><td>96–98</td><td>79</td></tr>
+        <tr><td>34</td><td>86–88</td><td>101–103</td><td>80</td></tr>
+        <tr><td>36</td><td>91–93</td><td>106–108</td><td>81</td></tr>
+      </table>
+      <div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:800;color:#1a3a8b;margin:16px 0 12px;">👠 Shoes (Women & Men)</div>
+      <table class="sg-table">
+        <tr><th>EU Size</th><th>UK</th><th>US Women</th><th>Foot Length (cm)</th></tr>
+        <tr><td>35</td><td>2.5</td><td>5</td><td>22.0</td></tr>
+        <tr><td>36</td><td>3</td><td>5.5</td><td>22.7</td></tr>
+        <tr><td>37</td><td>4</td><td>6.5</td><td>23.3</td></tr>
+        <tr><td>38</td><td>5</td><td>7.5</td><td>24.0</td></tr>
+        <tr><td>40</td><td>6.5</td><td>9</td><td>25.3</td></tr>
+        <tr><td>42</td><td>8</td><td>10.5</td><td>26.7</td></tr>
+        <tr><td>44</td><td>9.5</td><td>12</td><td>28.0</td></tr>
+      </table>
+      <div class="sg-note">💡 <b>Tip:</b> If you are between sizes, we recommend sizing up. All measurements are approximate. For help, chat us on WhatsApp: 09168031213</div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Panel -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-head">
+    <div class="notif-head-title">🔔 Notifications</div>
+    <button onclick="closeNotif()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:26px;height:26px;border-radius:50%;font-size:13px;cursor:pointer;">✕</button>
+  </div>
+  <div class="notif-body" id="notifBody">
+    <div class="notif-empty">No notifications yet</div>
+  </div>
+</div>
+
+<!-- Newsletter Section (injected above footer) -->
+<div class="newsletter-section" id="newsletterSection">
+  <div class="newsletter-inner">
+    <div class="newsletter-icon">📩</div>
+    <div class="newsletter-title">Get Exclusive Deals First!</div>
+    <div class="newsletter-sub">Subscribe for new arrivals, flash sales & special offers from BENIM Trade</div>
+    <div class="newsletter-form">
+      <input class="newsletter-input" id="nlEmail" type="email" placeholder="Enter your email address"/>
+      <button class="newsletter-btn" onclick="subscribeNewsletter()">Subscribe</button>
+    </div>
+    <div class="newsletter-success" id="nlSuccess">🎉 You're subscribed! Check WhatsApp for your welcome offer.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ NEW FEATURES JAVASCRIPT ═══════════════ -->
+<script>
+
+// ================================================================
+// 1. SCROLL PROGRESS BAR
+// ================================================================
+window.addEventListener('scroll', function(){
+  var scrollTop = window.scrollY || document.documentElement.scrollTop;
+  var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  var pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  var bar = document.getElementById('scrollProgress');
+  if(bar) bar.style.width = pct + '%';
+});
+
+// ================================================================
+// 2. BACK TO TOP BUTTON
+// ================================================================
+window.addEventListener('scroll', function(){
+  var btn = document.getElementById('backToTopBtn');
+  if(!btn) return;
+  if(window.scrollY > 400) btn.classList.add('show');
+  else btn.classList.remove('show');
+});
+
+// ================================================================
+// 3. COUPON CODE SYSTEM
+// ================================================================
+var COUPONS = {
+  'BENIM10': { type: 'percent', value: 10, label: '10% OFF' },
+  'BENIM20': { type: 'percent', value: 20, label: '20% OFF' },
+  'FLAT500':  { type: 'fixed',   value: 500, label: '₦500 OFF' },
+  'WELCOME':  { type: 'percent', value: 15, label: '15% OFF for new customers' },
+  'IBADAN5':  { type: 'percent', value: 5,  label: '5% OFF for Ibadan delivery' }
+};
+var appliedCoupon = null;
+var couponDiscount = 0;
+
+function applyCoupon(){
+  var inp = document.getElementById('couponCodeInput');
+  var msg = document.getElementById('couponMsg');
+  var savingEl = document.getElementById('couponSaving');
+  if(!inp || !msg) return;
+  var code = inp.value.trim().toUpperCase();
+  if(!code){ msg.className='coupon-msg err'; msg.textContent='Please enter a coupon code.'; return; }
+  var coupon = COUPONS[code];
+  if(!coupon){
+    msg.className='coupon-msg err'; msg.textContent='❌ Invalid coupon code. Try: BENIM10, WELCOME';
+    appliedCoupon=null; couponDiscount=0;
+    if(savingEl)savingEl.className='coupon-saving';
+    return;
+  }
+  var total=0; for(var i=0;i<cart.length;i++) total+=cart[i].price*cart[i].qty;
+  couponDiscount = coupon.type==='percent' ? Math.floor(total*coupon.value/100) : coupon.value;
+  appliedCoupon = code;
+  msg.className='coupon-msg ok';
+  msg.textContent='✅ Coupon "'+code+'" applied — '+coupon.label+'!';
+  if(savingEl){ savingEl.textContent='You save: ₦'+N(couponDiscount); savingEl.className='coupon-saving show'; }
+  updateOrderTotalWithCoupon();
+  showToast('Coupon applied! You save ₦'+N(couponDiscount)+' 🎉');
+}
+
+function updateOrderTotalWithCoupon(){
+  var totalEls = document.querySelectorAll('.osumtotal span:last-child');
+  if(appliedCoupon && couponDiscount > 0){
+    var baseTotal = 0;
+    for(var i=0;i<cart.length;i++) baseTotal+=cart[i].price*cart[i].qty;
+    var newTotal = Math.max(0, baseTotal - couponDiscount);
+    for(var i=0;i<totalEls.length;i++) totalEls[i].textContent = '₦'+N(newTotal);
+  }
+}
+
+// Inject coupon section into order form
+var _origBuildOrder = window.buildOrder;
+window.buildOrder = function(){
+  _origBuildOrder.call(this);
+  // Inject coupon section after the payment box
+  var ob = document.getElementById('orderBody');
+  if(!ob) return;
+  var refDiv = ob.querySelector('#oref');
+  if(refDiv && refDiv.parentNode){
+    var couponHTML = '<div class="coupon-section">'
+      +'<div class="coupon-label">🏷️ Have a coupon code?</div>'
+      +'<div class="coupon-row">'
+      +'<input class="coupon-input" id="couponCodeInput" placeholder="ENTER CODE (e.g. BENIM10)" maxlength="20"/>'
+      +'<button class="coupon-apply-btn" onclick="applyCoupon()">Apply</button>'
+      +'</div>'
+      +'<div class="coupon-msg" id="couponMsg"></div>'
+      +'<div class="coupon-saving" id="couponSaving"></div>'
+      +'</div>';
+    refDiv.parentNode.insertAdjacentHTML('beforebegin', couponHTML);
+  }
+  appliedCoupon=null; couponDiscount=0;
+};
+
+// ================================================================
+// 4. SIZE GUIDE
+// ================================================================
+function openSizeGuide(){ document.getElementById('sizeGuideOverlay').classList.add('open'); }
+function closeSizeGuide(){ document.getElementById('sizeGuideOverlay').classList.remove('open'); }
+document.addEventListener('click',function(e){
+  var sg=document.getElementById('sizeGuideOverlay');
+  if(sg&&e.target===sg)closeSizeGuide();
+});
+
+// Inject size guide link into product detail
+var _origOpenDetail = window.openDetail;
+window.openDetail = function(id){
+  _origOpenDetail.call(this,id);
+  // After detail opens, inject size guide link + reviews + social share
+  setTimeout(function(){
+    injectDetailExtras(id);
+  },150);
+};
+
+function injectDetailExtras(id){
+  var p=null; for(var i=0;i<PRODUCTS.length;i++){if(PRODUCTS[i].id===id){p=PRODUCTS[i];break;}} if(!p)return;
+  var szLabel=document.querySelector('.dsz-label');
+  if(szLabel && !szLabel.querySelector('.size-guide-link')){
+    szLabel.innerHTML='Select Size: <span class="size-guide-link" onclick="openSizeGuide()">📏 Size Guide</span>';
+  }
+  // Social Share
+  var dbtnRow=document.querySelector('.dbtn-row');
+  if(dbtnRow && !document.getElementById('socialShareRow')){
+    var pageUrl=encodeURIComponent(window.location.href+'?product='+id);
+    var shareText=encodeURIComponent('Check out '+p.name+' on BENIM Trade for only ₦'+N(p.price)+'!');
+    var shareHTML='<div class="social-share-row" id="socialShareRow">'
+      +'<span class="share-label">Share:</span>'
+      +'<button class="share-btn share-wa" onclick="window.open(\'https://wa.me/?text='+shareText+' '+pageUrl+'\',\'_blank\')">💬 WhatsApp</button>'
+      +'<button class="share-btn share-fb" onclick="window.open(\'https://www.facebook.com/sharer/sharer.php?u='+pageUrl+'\',\'_blank\')">👍 Facebook</button>'
+      +'<button class="share-btn share-copy" onclick="copyProductLink(\''+window.location.href+'\')">🔗 Copy Link</button>'
+      +'</div>';
+    dbtnRow.insertAdjacentHTML('afterend', shareHTML);
+  }
+  // Reviews section
+  var ddesc=document.querySelector('.ddesc');
+  if(ddesc && !document.getElementById('reviewsSection'+id)){
+    var reviewsHTML=buildReviewsHTML(id);
+    ddesc.insertAdjacentHTML('afterend','<div id="reviewsSection'+id+'">'+reviewsHTML+'</div>');
+  }
+}
+
+function copyProductLink(url){
+  try{navigator.clipboard.writeText(url);}catch(e){var t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+  showToast('Link copied to clipboard! 🔗');
+}
+
+// ================================================================
+// 5. NEWSLETTER SUBSCRIPTION → Firebase
+// ================================================================
+function subscribeNewsletter(){
+  var emailEl=document.getElementById('nlEmail');
+  var successEl=document.getElementById('nlSuccess');
+  if(!emailEl||!successEl)return;
+  var email=emailEl.value.trim();
+  if(!email||!email.includes('@')){ showToast('Please enter a valid email.'); return; }
+  if(!window._fbAddDoc){ showToast('Please try again in a moment.'); return; }
+  window._fbAddDoc(window._fbCollection(window._fbDb,'newsletter'),{
+    email:email, subscribedAt:window._fbServerTimestamp()
+  }).then(function(){
+    emailEl.value='';
+    successEl.classList.add('show');
+    showToast('🎉 Subscribed! Welcome to BENIM Trade!');
+    setTimeout(function(){successEl.classList.remove('show');},5000);
+  }).catch(function(){
+    showToast('Already subscribed or error occurred.');
+  });
+}
+
+// ================================================================
+// 6. PRODUCT REVIEWS
+// ================================================================
+var _reviews = {
+  // Pre-loaded sample reviews (show for all products)
+  default: [
+    {name:'Amaka O.',star:5,text:'Absolutely love this! The quality is amazing and delivery was so fast. Will order again!',date:'2 days ago',verified:true},
+    {name:'Tunde B.',star:4,text:'Nice product, fits perfectly. Packaging was neat. Highly recommend BENIM Trade.',date:'1 week ago',verified:true},
+    {name:'Fatima I.',star:5,text:'Exactly as described. My husband loves it. Great value for money!',date:'2 weeks ago',verified:true}
+  ]
+};
+var _pendingReviewStar=5;
+
+function buildReviewsHTML(id){
+  var reviews=_reviews[id]||_reviews.default;
+  var html='<div class="reviews-section"><div class="reviews-title">⭐ Customer Reviews ('+reviews.length+')</div>';
+  for(var i=0;i<reviews.length;i++){
+    var r=reviews[i];
+    var stars=''; for(var s=1;s<=5;s++) stars+='<span style="color:'+(s<=r.star?'#e8b44a':'#ddd')+';">★</span>';
+    html+='<div class="review-card">'
+      +'<div class="review-header">'
+      +'<div class="review-avatar">'+r.name.charAt(0)+'</div>'
+      +'<div><div class="review-name">'+r.name+'</div><div class="review-date">'+r.date+'</div></div>'
+      +'</div>'
+      +'<div class="review-stars">'+stars+'</div>'
+      +'<div class="review-text">'+r.text+'</div>'
+      +(r.verified?'<div class="review-verified">✓ Verified Purchase</div>':'')
+      +'</div>';
+  }
+  html+='<button class="add-review-btn" onclick="toggleReviewForm('+id+')">✏️ Write a Review</button>';
+  html+='<div class="review-form" id="reviewForm'+id+'">'
+    +'<div style="font-family:Nunito,sans-serif;font-size:12px;font-weight:800;color:#333;margin-bottom:8px;">Your Rating:</div>'
+    +'<div class="review-stars-select" id="rstarRow'+id+'">'
+    +'<button class="rstar-btn on" data-v="1" onclick="setReviewStar('+id+',1)">★</button>'
+    +'<button class="rstar-btn on" data-v="2" onclick="setReviewStar('+id+',2)">★</button>'
+    +'<button class="rstar-btn on" data-v="3" onclick="setReviewStar('+id+',3)">★</button>'
+    +'<button class="rstar-btn on" data-v="4" onclick="setReviewStar('+id+',4)">★</button>'
+    +'<button class="rstar-btn on" data-v="5" onclick="setReviewStar('+id+',5)">★</button>'
+    +'</div>'
+    +'<textarea id="reviewText'+id+'" placeholder="Share your experience with this product..."></textarea>'
+    +'<button class="review-submit" onclick="submitReview('+id+')">Post Review</button>'
+    +'</div>'
+    +'</div>';
+  return html;
+}
+
+function toggleReviewForm(id){
+  var f=document.getElementById('reviewForm'+id);
+  if(f) f.classList.toggle('show');
+}
+
+function setReviewStar(id, val){
+  _pendingReviewStar=val;
+  var row=document.getElementById('rstarRow'+id);
+  if(!row)return;
+  var btns=row.querySelectorAll('.rstar-btn');
+  for(var i=0;i<btns.length;i++){
+    var v=parseInt(btns[i].getAttribute('data-v'));
+    btns[i].className='rstar-btn'+(v<=val?' on':'');
+  }
+}
+
+function submitReview(id){
+  var txt=document.getElementById('reviewText'+id);
+  if(!txt||!txt.value.trim()){showToast('Please write something!');return;}
+  var name=curUser?curUser.name:'Anonymous';
+  var review={name:name,star:_pendingReviewStar,text:txt.value.trim(),date:'Just now',verified:!!curUser};
+  if(!_reviews[id]) _reviews[id]=JSON.parse(JSON.stringify(_reviews.default));
+  _reviews[id].unshift(review);
+  if(window._fbAddDoc){
+    window._fbAddDoc(window._fbCollection(window._fbDb,'reviews'),{
+      productId:id,name:name,star:_pendingReviewStar,
+      text:txt.value.trim(),verified:!!curUser,
+      createdAt:window._fbServerTimestamp()
+    }).catch(function(){});
+  }
+  var sec=document.getElementById('reviewsSection'+id);
+  if(sec){sec.innerHTML=buildReviewsHTML(id);}
+  showToast('Thank you for your review! ⭐');
+}
+
+// ================================================================
+// 7. NOTIFICATION BELL
+// ================================================================
+var _notifications = [
+  {icon:'🆕', text:'New arrivals just landed! Check out our latest Premium Jeans and Kids Tees.', time:'1 hour ago'},
+  {icon:'🔥', text:'Flash Sale ending soon — up to 20% OFF on selected items!', time:'3 hours ago'},
+  {icon:'🚚', text:'Free delivery on all orders within Ibadan today only.', time:'Today'},
+  {icon:'🎁', text:'Use code BENIM10 for 10% off your next order.', time:'Yesterday'}
+];
+var _notifOpen=false;
+
+function toggleNotif(){
+  _notifOpen=!_notifOpen;
+  var panel=document.getElementById('notifPanel');
+  if(panel) panel.classList.toggle('open',_notifOpen);
+  var dot=document.getElementById('notifDot');
+  if(dot&&_notifOpen) dot.classList.remove('show');
+  if(_notifOpen) renderNotifications();
+}
+
+function closeNotif(){
+  _notifOpen=false;
+  var panel=document.getElementById('notifPanel');
+  if(panel) panel.classList.remove('open');
+}
+
+function renderNotifications(){
+  var body=document.getElementById('notifBody');
+  if(!body)return;
+  if(!_notifications.length){body.innerHTML='<div class="notif-empty">No notifications</div>';return;}
+  var h='';
+  for(var i=0;i<_notifications.length;i++){
+    h+='<div class="notif-item">'
+      +'<div class="notif-item-icon">'+_notifications[i].icon+'</div>'
+      +'<div><div class="notif-item-text">'+_notifications[i].text+'</div>'
+      +'<div class="notif-item-time">'+_notifications[i].time+'</div></div>'
+      +'</div>';
+  }
+  body.innerHTML=h;
+}
+
+document.addEventListener('click',function(e){
+  var panel=document.getElementById('notifPanel');
+  var bell=document.getElementById('notifBellBtn');
+  if(panel&&_notifOpen&&!panel.contains(e.target)&&bell&&!bell.contains(e.target)){
+    closeNotif();
+  }
+});
+
+// ================================================================
+// 8. DARK MODE
+// ================================================================
+function toggleDarkMode(){
+  document.body.classList.toggle('dark-mode');
+  var isDark=document.body.classList.contains('dark-mode');
+  try{localStorage.setItem('benim_darkmode',isDark?'1':'0');}catch(e){}
+  var btn=document.getElementById('darkModeBtn');
+  if(btn)btn.textContent=isDark?'☀️':'🌙';
+  showToast(isDark?'🌙 Dark Mode ON':'☀️ Light Mode ON');
+}
+
+// Load dark mode preference
+document.addEventListener('DOMContentLoaded',function(){
+  try{if(localStorage.getItem('benim_darkmode')==='1'){
+    document.body.classList.add('dark-mode');
+    var btn=document.getElementById('darkModeBtn');
+    if(btn)btn.textContent='☀️';
+  }}catch(e){}
+});
+
+// ================================================================
+// 9. STICKY CART BAR
+// ================================================================
+var _stickyCartBarDismissed=false;
+
+function updateStickyCartBar(){
+  if(_stickyCartBarDismissed)return;
+  var bar=document.getElementById('stickyCartBar');
+  if(!bar)return;
+  var total=0,count=0;
+  for(var i=0;i<cart.length;i++){total+=cart[i].price*cart[i].qty;count+=cart[i].qty;}
+  var scbCount=document.getElementById('scbCount');
+  var scbTotal=document.getElementById('scbTotal');
+  if(scbCount)scbCount.textContent=count;
+  if(scbTotal)scbTotal.textContent=N(total);
+  if(count>0) bar.classList.add('show');
+  else bar.classList.remove('show');
+}
+
+function closeCartBar(){
+  _stickyCartBarDismissed=true;
+  var bar=document.getElementById('stickyCartBar');
+  if(bar)bar.classList.remove('show');
+}
+
+// Hook into updBadge to also update sticky bar
+var _origUpdBadge=window.updBadge;
+window.updBadge=function(){
+  _origUpdBadge.call(this);
+  _stickyCartBarDismissed=false;
+  updateStickyCartBar();
+};
+
+// ================================================================
+// 10. ADMIN: EXPORT ORDERS TO CSV
+// ================================================================
+function exportOrdersCSV(){
+  if(!window._fbGetDocs){showToast('Firebase not ready.');return;}
+  showLoading('Exporting orders...');
+  var q=window._fbQuery(window._fbCollection(window._fbDb,'orders'),window._fbOrderBy('createdAt','desc'));
+  window._fbGetDocs(q).then(function(snap){
+    hideLoading();
+    if(snap.empty){showToast('No orders to export.');return;}
+    var rows=[['Order ID','Customer','Phone','Email','Address','Items','Total','Transfer Ref','Status','Date']];
+    snap.forEach(function(d){
+      var o=d.data();
+      var itemsStr='';
+      if(o.items)for(var i=0;i<o.items.length;i++)itemsStr+=o.items[i].name+' ('+o.items[i].size+') x'+o.items[i].qty+(i<o.items.length-1?' | ':'');
+      var dt=o.createdAt&&o.createdAt.toDate?o.createdAt.toDate().toLocaleDateString('en-NG'):'N/A';
+      rows.push([o.orderId,o.customerName,o.phone,o.email||'','"'+o.address+'"','"'+itemsStr+'"',o.total||0,o.transferRef||'',o.status||'Pending',dt]);
+    });
+    var csv=rows.map(function(r){return r.join(',');}).join('\n');
+    var blob=new Blob([csv],{type:'text/csv'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='BENIM_Trade_Orders_'+new Date().toISOString().slice(0,10)+'.csv';
+    a.click();
+    showToast('Orders exported to CSV ✅');
+  }).catch(function(){
+    hideLoading();
+    showToast('Export failed. Try again.');
+  });
+}
+
+// Inject Export CSV button into admin panel
+var _origLoadEnhancedAdminOrders=window.loadAdminOrders;
+window.loadAdminOrders=function(){
+  if(typeof loadEnhancedAdminOrders==='function') loadEnhancedAdminOrders();
+  else _origLoadEnhancedAdminOrders();
+  // Add export button
+  setTimeout(function(){
+    var adminBody=document.getElementById('adminBody');
+    if(adminBody && !document.getElementById('exportCsvWrap')){
+      var adminHead=document.querySelector('.admin-head');
+      if(adminHead&&!adminHead.querySelector('#exportCsvWrap')){
+        var wrap=document.createElement('div');
+        wrap.id='exportCsvWrap';
+        wrap.innerHTML='<button class="export-csv-btn" onclick="exportOrdersCSV()">📥 Export CSV</button>';
+        wrap.style.cssText='display:inline-block;';
+        adminHead.appendChild(wrap);
+      }
+    }
+  },400);
+};
+
+// ================================================================
+// 11. INJECT NOTIFICATION BELL + DARK MODE INTO NAVBAR
+// ================================================================
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(function(){
+    var navInner=document.querySelector('.navbar-inner');
+    if(navInner && !document.getElementById('darkModeBtn')){
+      // Dark Mode Toggle
+      var dmBtn=document.createElement('button');
+      dmBtn.id='darkModeBtn'; dmBtn.className='dark-mode-toggle'; dmBtn.textContent='🌙';
+      dmBtn.onclick=toggleDarkMode; dmBtn.title='Toggle Dark Mode';
+      dmBtn.style.marginLeft='auto';
+      navInner.appendChild(dmBtn);
+
+      // Notification Bell
+      var bellWrap=document.createElement('div');
+      bellWrap.style.cssText='position:relative;margin-left:6px;';
+      bellWrap.innerHTML='<button id="notifBellBtn" class="notif-bell-btn" onclick="toggleNotif()" title="Notifications">🔔<div class="notif-dot show" id="notifDot"></div></button>';
+      navInner.appendChild(bellWrap);
+    }
+  },1800);
+});
+
+console.log('✅ BENIM Trade — Professional Features v2 Loaded: Coupon, Reviews, Size Guide, Dark Mode, Newsletter, Notifications, CSV Export, Sticky Cart, Scroll Progress');
+</script>
+
 </body>
 </html>
