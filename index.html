@@ -3270,73 +3270,67 @@ window.submitOrder = function(){
   var n=document.getElementById("oname").value.trim();
   var ph=document.getElementById("ophone").value.trim();
   var ad=document.getElementById("oaddr").value.trim();
-  var ref=document.getElementById("oref").value.trim();
   var err=document.getElementById("orderErr");
-  if(!n||!ph||!ad||!ref){
-    if(err){err.style.display="block";err.textContent="Please fill all required fields.";}
-    return;
+  var payMethod=window._selectedPayMethod||"transfer";
+  var ref="";
+  if(payMethod==="transfer"){
+    var refEl=document.getElementById("oref");
+    ref=refEl?refEl.value.trim():"";
+    if(!n||!ph||!ad||!ref){if(err){err.style.display="block";err.textContent="Please fill all fields including Transfer Reference.";}return;}
+  } else {
+    ref="PAY-ON-DELIVERY";
+    if(!n||!ph||!ad){if(err){err.style.display="block";err.textContent="Please fill all required fields.";}return;}
   }
-  if(!window._fbAddDoc){
-    if(err){err.style.display="block";err.textContent="Firebase not ready. Please wait."}
-    return;
-  }
+  if(!window._fbAddDoc){if(err){err.style.display="block";err.textContent="Firebase not ready. Please wait.";}return;}
   var oid="BT-"+Date.now().toString().slice(-6);
   var total=0;for(var i=0;i<cart.length;i++)total+=cart[i].price*cart[i].qty;
+  var disc=(typeof appliedCoupon!=="undefined"&&appliedCoupon&&couponDiscount>0)?couponDiscount:0;
+  var finalTotal=Math.max(0,total-disc)+(payMethod==="pod"?200:0);
   var items=[];for(var i=0;i<cart.length;i++)items.push({name:cart[i].name,size:cart[i].size,qty:cart[i].qty,price:cart[i].price});
-  var orderData={orderId:oid,customerName:n,phone:ph,address:ad,transferRef:ref,
-    email:curUser?curUser.email:"",items:items,total:total,status:"Pending",
-    createdAt:window._fbServerTimestamp()};
+  var orderData={orderId:oid,customerName:n,phone:ph,address:ad,transferRef:ref,paymentMethod:payMethod,
+    email:curUser?curUser.email:"",items:items,total:finalTotal,originalTotal:total,
+    couponCode:(typeof appliedCoupon!=="undefined"&&appliedCoupon)||"",couponDiscount:disc,
+    status:"Pending",createdAt:window._fbServerTimestamp()};
   var ob=document.getElementById("orderBody");
   if(err)err.style.display="none";
   showLoading("Placing your order...");
   window._fbAddDoc(window._fbCollection(window._fbDb,"orders"),orderData).then(function(){
     hideLoading();
-    var waMsg="Dear BENIM_TRADE,%0A%0AI just placed an order and would like to confirm:%0A%0AOrder ID: "+oid+"%0AName: "+encodeURIComponent(n)+"%0APhone: "+ph+"%0AAddress: "+encodeURIComponent(ad)+"%0ATotal: ₦"+N(total)+"%0ATransfer Ref: "+ref+"%0A%0AKindly confirm receipt. Thank you!";
+    var isPOD=payMethod==="pod";
+    var waMsg=isPOD
+      ?"Dear BENIM_TRADE,%0A%0AI just placed an order (PAY ON DELIVERY):%0A%0AOrder ID: "+oid+"%0AName: "+encodeURIComponent(n)+"%0APhone: "+ph+"%0AAddress: "+encodeURIComponent(ad)+"%0ATotal: \u20a6"+N(finalTotal)+" (incl. \u20a6200 handling)%0APayment: Cash on Delivery%0A%0APlease confirm. Thank you!"
+      :"Dear BENIM_TRADE,%0A%0AI just placed an order:%0A%0AOrder ID: "+oid+"%0AName: "+encodeURIComponent(n)+"%0APhone: "+ph+"%0AAddress: "+encodeURIComponent(ad)+"%0ATotal: \u20a6"+N(finalTotal)+"%0ATransfer Ref: "+ref+"%0A%0AKindly confirm receipt. Thank you!";
     var waUrl="https://wa.me/2349168031213?text="+waMsg;
-    
-    // Enhanced confirmation HTML
+    var payInfoHTML=isPOD
+      ?'<div style="background:#f0faf5;border:2px solid #1a6b3c;border-radius:10px;padding:14px;margin-bottom:14px;text-align:left;"><div style="font-family:Nunito,sans-serif;font-size:12px;font-weight:800;color:#1a6b3c;margin-bottom:6px;">&#128666; Pay on Delivery Confirmed</div><div style="font-family:Nunito,sans-serif;font-size:13px;color:#333;">Have <b style="color:#c0392b;">&#8358;'+N(finalTotal)+'</b> ready when your order arrives.</div><div style="font-family:Nunito,sans-serif;font-size:11px;color:#666;margin-top:4px;">Includes &#8358;200 handling fee. Cash only.</div></div>'
+      :'<div style="background:#f0f7f3;border:2px solid #1a6b3c;border-radius:10px;padding:14px;margin-bottom:14px;text-align:left;"><div style="font-family:Nunito,sans-serif;font-size:12px;font-weight:800;color:#1a6b3c;margin-bottom:8px;">&#128179; Payment Details</div><div style="font-family:Nunito,sans-serif;font-size:13px;color:#333;">Transfer <b style="color:#c0392b;">&#8358;'+N(finalTotal)+'</b> to Opay &#8212; <b>9168031213</b></div><div style="font-family:Nunito,sans-serif;font-size:11px;color:#666;margin-top:4px;">Account: AISHAT ADERONKE ADEWOLE</div>'+(disc>0?'<div style="font-family:Nunito,sans-serif;font-size:11px;color:#1a6b3c;font-weight:800;margin-top:4px;">&#10003; Coupon applied &#8212; saved &#8358;'+N(disc)+'!</div>':'')+'</div>';
     ob.innerHTML='<div style="text-align:center;padding:24px 16px;">'
-      +'<div style="font-size:64px;margin-bottom:10px;animation:bounceIn .6s ease">🎉</div>'
+      +'<div style="font-size:64px;margin-bottom:10px;">&#127881;</div>'
       +'<div style="font-family:Nunito,sans-serif;font-size:24px;font-weight:900;color:#1a6b3c;margin-bottom:6px;">Order Placed Successfully!</div>'
       +'<div style="font-family:Nunito,sans-serif;font-size:13px;color:#666;margin-bottom:18px;">Thank you, <b>'+n+'</b>! We\'ll confirm shortly.</div>'
-      
-      // Big Order ID display
       +'<div style="background:linear-gradient(135deg,#1a3a8b,#2c55c7);border-radius:14px;padding:20px;margin-bottom:16px;text-align:center;">'
       +'<div style="font-family:Nunito,sans-serif;font-size:11px;color:rgba(255,255,255,.7);font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">Your Order ID</div>'
       +'<div style="font-family:Nunito,sans-serif;font-size:32px;font-weight:900;color:#fff;letter-spacing:2px;">'+oid+'</div>'
       +'<div style="font-family:Nunito,sans-serif;font-size:11px;color:rgba(255,255,255,.6);margin-top:6px;">Save this to track your order</div>'
       +'</div>'
-      
-      // Status tracker
       +'<div style="margin-bottom:16px;">'
       +'<div style="font-family:Nunito,sans-serif;font-size:11px;color:#888;font-weight:700;text-transform:uppercase;margin-bottom:8px;">Order Status</div>'
       +'<div class="order-status-bar" style="margin:0;">'
-      +'<div class="osb-step active"><span class="osb-icon">⏳</span><div>Pending</div><div class="osb-dot"></div></div>'
+      +'<div class="osb-step active"><span class="osb-icon">&#9203;</span><div>Pending</div><div class="osb-dot"></div></div>'
       +'<div class="osb-line"></div>'
-      +'<div class="osb-step"><span class="osb-icon">✅</span><div>Confirmed</div><div class="osb-dot"></div></div>'
+      +'<div class="osb-step"><span class="osb-icon">&#10003;</span><div>Confirmed</div><div class="osb-dot"></div></div>'
       +'<div class="osb-line"></div>'
-      +'<div class="osb-step"><span class="osb-icon">🚚</span><div>Shipped</div><div class="osb-dot"></div></div>'
+      +'<div class="osb-step"><span class="osb-icon">&#128666;</span><div>Shipped</div><div class="osb-dot"></div></div>'
       +'<div class="osb-line"></div>'
-      +'<div class="osb-step"><span class="osb-icon">📦</span><div>Delivered</div><div class="osb-dot"></div></div>'
-      +'</div>'
-      +'</div>'
-      
-      // Payment info
-      +'<div style="background:#f0f7f3;border:2px solid #1a6b3c;border-radius:10px;padding:14px;margin-bottom:14px;text-align:left;">'
-      +'<div style="font-family:Nunito,sans-serif;font-size:12px;font-weight:800;color:#1a6b3c;margin-bottom:8px;">💳 Payment Details</div>'
-      +'<div style="font-family:Nunito,sans-serif;font-size:13px;color:#333;">Transfer <b style="color:#c0392b;">₦'+N(total)+'</b> to Opay — <b>9168031213</b></div>'
-      +'<div style="font-family:Nunito,sans-serif;font-size:11px;color:#666;margin-top:4px;">Account: AISHAT ADERONKE ADEWOLE</div>'
-      +'</div>'
-      
-      // Action buttons
-      +'<a href="'+waUrl+'" target="_blank" style="display:block;background:#25D366;color:#fff;font-family:Nunito,sans-serif;font-size:14px;font-weight:900;padding:14px;border-radius:10px;text-decoration:none;margin-bottom:10px;">💬 CONFIRM ON WHATSAPP</a>'
-      +'<button onclick="closeOrder();openTrackOrder(\''+oid+'\')" style="width:100%;background:#f0f4ff;color:#1a3a8b;border:2px solid #1a3a8b;font-family:Nunito,sans-serif;font-size:13px;font-weight:900;padding:12px;border-radius:10px;cursor:pointer;margin-bottom:10px;">📦 Track This Order</button>'
+      +'<div class="osb-step"><span class="osb-icon">&#128230;</span><div>Delivered</div><div class="osb-dot"></div></div>'
+      +'</div></div>'
+      +payInfoHTML
+      +'<a href="'+waUrl+'" target="_blank" style="display:block;background:#25D366;color:#fff;font-family:Nunito,sans-serif;font-size:14px;font-weight:900;padding:14px;border-radius:10px;text-decoration:none;margin-bottom:10px;">&#128172; CONFIRM ON WHATSAPP</a>'
+      +'<button onclick="closeOrder();openTrackOrder(\''+oid+'\')" style="width:100%;background:#f0f4ff;color:#1a3a8b;border:2px solid #1a3a8b;font-family:Nunito,sans-serif;font-size:13px;font-weight:900;padding:12px;border-radius:10px;cursor:pointer;margin-bottom:10px;">&#128230; Track This Order</button>'
       +'<button class="bor" onclick="closeOrder()" style="background:#aaa !important;">CONTINUE SHOPPING</button>'
       +'</div>';
-    
     cart=[];try{localStorage.removeItem("benim_cart");}catch(e){}updBadge();
     setTimeout(function(){window.open(waUrl,"_blank");},600);
-    
   }).catch(function(){
     hideLoading();
     if(err){err.style.display="block";err.textContent="Failed to save order. Check your connection.";}
@@ -4024,11 +4018,40 @@ function updateOrderTotalWithCoupon(){
 var _origBuildOrder = window.buildOrder;
 window.buildOrder = function(){
   _origBuildOrder.call(this);
-  // Inject coupon section after the payment box
   var ob = document.getElementById('orderBody');
   if(!ob) return;
+
+  // ── 1. PAYMENT METHOD SELECTOR — inject right before paybox ──
+  var paybox = ob.querySelector('.paybox');
+  if(paybox && !document.getElementById('payMethodWrap')){
+    var pmHTML = '<div id="payMethodWrap" style="margin-bottom:14px;">'
+      +'<div style="font-family:Nunito,sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:10px;">💳 Choose Payment Method</div>'
+      +'<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+      // Bank Transfer option
+      +'<label id="pmTransferLabel" style="flex:1;min-width:130px;display:flex;align-items:center;gap:10px;border:2px solid #1a3a8b;border-radius:10px;padding:12px 14px;cursor:pointer;background:#f0f4ff;transition:all .2s;" onclick="selectPayMethod(\'transfer\')">'
+      +'<input type="radio" name="payMethod" value="transfer" id="pmTransfer" checked style="display:none;"/>'
+      +'<span id="pmTransferDot" style="width:18px;height:18px;border-radius:50%;border:2px solid #1a3a8b;background:#1a3a8b;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:8px;height:8px;background:#fff;border-radius:50%;display:block;"></span></span>'
+      +'<div><div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:900;color:#1a3a8b;">🏦 Bank Transfer</div>'
+      +'<div style="font-family:Nunito,sans-serif;font-size:10px;color:#666;">Transfer before delivery</div></div>'
+      +'</label>'
+      // Pay on Delivery option
+      +'<label id="pmPodLabel" style="flex:1;min-width:130px;display:flex;align-items:center;gap:10px;border:2px solid #ddd;border-radius:10px;padding:12px 14px;cursor:pointer;background:#fff;transition:all .2s;" onclick="selectPayMethod(\'pod\')">'
+      +'<input type="radio" name="payMethod" value="pod" id="pmPod" style="display:none;"/>'
+      +'<span id="pmPodDot" style="width:18px;height:18px;border-radius:50%;border:2px solid #ddd;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="width:8px;height:8px;background:transparent;border-radius:50%;display:block;"></span></span>'
+      +'<div><div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:900;color:#333;">🚚 Pay on Delivery</div>'
+      +'<div style="font-family:Nunito,sans-serif;font-size:10px;color:#666;">Cash when item arrives</div></div>'
+      +'</label>'
+      +'</div>'
+      +'<div id="podNote" style="display:none;background:#fff7e0;border:1px solid #e8b44a;border-radius:8px;padding:10px 13px;margin-top:10px;font-family:Nunito,sans-serif;font-size:12px;color:#7a4a00;line-height:1.7;">'
+      +'⚠️ <b>Pay on Delivery</b> is available <b>within Ibadan only</b>. A ₦200 handling fee applies. Please have the exact amount ready when your item arrives.'
+      +'</div>'
+      +'</div>';
+    paybox.insertAdjacentHTML('beforebegin', pmHTML);
+  }
+
+  // ── 2. COUPON — inject before Transfer Ref field ──
   var refDiv = ob.querySelector('#oref');
-  if(refDiv && refDiv.parentNode){
+  if(refDiv && refDiv.parentNode && !document.getElementById('couponCodeInput')){
     var couponHTML = '<div class="coupon-section">'
       +'<div class="coupon-label">🏷️ Have a coupon code?</div>'
       +'<div class="coupon-row">'
@@ -4042,6 +4065,41 @@ window.buildOrder = function(){
   }
   appliedCoupon=null; couponDiscount=0;
 };
+
+// Payment method toggle logic
+window._selectedPayMethod = 'transfer';
+function selectPayMethod(method){
+  window._selectedPayMethod = method;
+  var transferLabel = document.getElementById('pmTransferLabel');
+  var podLabel = document.getElementById('pmPodLabel');
+  var transferDot = document.getElementById('pmTransferDot');
+  var podDot = document.getElementById('pmPodDot');
+  var podNote = document.getElementById('podNote');
+  var paybox = document.querySelector('.paybox');
+  var refWrap = document.getElementById('oref');
+  if(!transferLabel||!podLabel) return;
+  if(method==='transfer'){
+    transferLabel.style.cssText='flex:1;min-width:130px;display:flex;align-items:center;gap:10px;border:2px solid #1a3a8b;border-radius:10px;padding:12px 14px;cursor:pointer;background:#f0f4ff;transition:all .2s;';
+    podLabel.style.cssText='flex:1;min-width:130px;display:flex;align-items:center;gap:10px;border:2px solid #ddd;border-radius:10px;padding:12px 14px;cursor:pointer;background:#fff;transition:all .2s;';
+    transferDot.innerHTML='<span style="width:8px;height:8px;background:#fff;border-radius:50%;display:block;"></span>';
+    transferDot.style.cssText='width:18px;height:18px;border-radius:50%;border:2px solid #1a3a8b;background:#1a3a8b;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    podDot.innerHTML='<span style="width:8px;height:8px;background:transparent;border-radius:50%;display:block;"></span>';
+    podDot.style.cssText='width:18px;height:18px;border-radius:50%;border:2px solid #ddd;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    if(podNote) podNote.style.display='none';
+    if(paybox) paybox.style.display='';
+    if(refWrap) refWrap.parentNode.style.display='';
+  } else {
+    podLabel.style.cssText='flex:1;min-width:130px;display:flex;align-items:center;gap:10px;border:2px solid #1a6b3c;border-radius:10px;padding:12px 14px;cursor:pointer;background:#f0faf5;transition:all .2s;';
+    transferLabel.style.cssText='flex:1;min-width:130px;display:flex;align-items:center;gap:10px;border:2px solid #ddd;border-radius:10px;padding:12px 14px;cursor:pointer;background:#fff;transition:all .2s;';
+    podDot.innerHTML='<span style="width:8px;height:8px;background:#fff;border-radius:50%;display:block;"></span>';
+    podDot.style.cssText='width:18px;height:18px;border-radius:50%;border:2px solid #1a6b3c;background:#1a6b3c;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    transferDot.innerHTML='<span style="width:8px;height:8px;background:transparent;border-radius:50%;display:block;"></span>';
+    transferDot.style.cssText='width:18px;height:18px;border-radius:50%;border:2px solid #ddd;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    if(podNote) podNote.style.display='block';
+    if(paybox) paybox.style.display='none';
+    if(refWrap) refWrap.parentNode.style.display='none';
+  }
+}
 
 // ================================================================
 // 4. SIZE GUIDE
@@ -4130,42 +4188,82 @@ var _reviews = {
 };
 var _pendingReviewStar=5;
 
+// ── Load real Firebase reviews then render ──
+function loadAndRenderReviews(id){
+  var sec=document.getElementById('reviewsSection'+id);
+  if(!sec)return;
+  if(!window._fbGetDocs||!window._fbDb){renderReviewsFromCache(id);return;}
+  sec.innerHTML='<div style="padding:20px 0;text-align:center;"><div class="track-spinner" style="margin:0 auto 8px;width:28px;height:28px;border-width:3px;"></div><div style="font-family:Nunito,sans-serif;font-size:12px;color:#aaa;">Loading reviews...</div></div>';
+  window._fbGetDocs(window._fbQuery(window._fbCollection(window._fbDb,'reviews'),window._fbOrderBy('createdAt','desc'))).then(function(snap){
+    if(!_reviews[id]) _reviews[id]=JSON.parse(JSON.stringify(_reviews.default));
+    snap.forEach(function(d){
+      var r=d.data();
+      if(String(r.productId)===String(id)){
+        var already=false;
+        for(var x=0;x<_reviews[id].length;x++){if(_reviews[id][x]._fbid===d.id){already=true;break;}}
+        if(!already){
+          var dt=r.createdAt&&r.createdAt.toDate?r.createdAt.toDate().toLocaleDateString('en-NG',{month:'short',day:'numeric',year:'numeric'}):'Recently';
+          _reviews[id].unshift({_fbid:d.id,name:r.name,star:r.star,text:r.text,date:dt,verified:r.verified||false});
+        }
+      }
+    });
+    sec.innerHTML=buildReviewsHTML(id);
+  }).catch(function(){
+    renderReviewsFromCache(id);
+  });
+}
+function renderReviewsFromCache(id){
+  var sec=document.getElementById('reviewsSection'+id);
+  if(sec)sec.innerHTML=buildReviewsHTML(id);
+}
+
 function buildReviewsHTML(id){
   var reviews=_reviews[id]||_reviews.default;
-  var html='<div class="reviews-section"><div class="reviews-title">⭐ Customer Reviews ('+reviews.length+')</div>';
+  // Rating summary
+  var total5=0,cnt=reviews.length;
+  for(var x=0;x<reviews.length;x++) total5+=reviews[x].star;
+  var avg=cnt>0?Math.round((total5/cnt)*10)/10:0;
+  var avgStars=''; for(var s=1;s<=5;s++) avgStars+='<span style="color:'+(s<=Math.round(avg)?'#e8b44a':'#ddd')+';">★</span>';
+  var html='<div class="reviews-section">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">'
+    +'<div class="reviews-title" style="margin-bottom:0;">⭐ Customer Reviews</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;">'
+    +'<div style="font-size:20px;font-weight:900;font-family:Nunito,sans-serif;color:#333;">'+avg+'</div>'
+    +'<div>'+avgStars+'<div style="font-family:Nunito,sans-serif;font-size:10px;color:#aaa;">'+(cnt)+' review'+(cnt!==1?'s':'')+'</div></div>'
+    +'</div></div>';
   for(var i=0;i<reviews.length;i++){
     var r=reviews[i];
     var stars=''; for(var s=1;s<=5;s++) stars+='<span style="color:'+(s<=r.star?'#e8b44a':'#ddd')+';">★</span>';
     html+='<div class="review-card">'
       +'<div class="review-header">'
-      +'<div class="review-avatar">'+r.name.charAt(0)+'</div>'
-      +'<div><div class="review-name">'+r.name+'</div><div class="review-date">'+r.date+'</div></div>'
+      +'<div class="review-avatar">'+r.name.charAt(0).toUpperCase()+'</div>'
+      +'<div style="flex:1;"><div class="review-name">'+r.name+'</div><div class="review-date">'+r.date+'</div></div>'
       +'</div>'
       +'<div class="review-stars">'+stars+'</div>'
       +'<div class="review-text">'+r.text+'</div>'
-      +(r.verified?'<div class="review-verified">✓ Verified Purchase</div>':'')
+      +(r.verified?'<div class="review-verified">&#10003; Verified Purchase</div>':'')
       +'</div>';
   }
-  html+='<button class="add-review-btn" onclick="toggleReviewForm('+id+')">✏️ Write a Review</button>';
-  html+='<div class="review-form" id="reviewForm'+id+'">'
-    +'<div style="font-family:Nunito,sans-serif;font-size:12px;font-weight:800;color:#333;margin-bottom:8px;">Your Rating:</div>'
+  // Write review section — always visible, not hidden
+  html+='<div style="background:#f0f4ff;border:2px solid #1a3a8b;border-radius:12px;padding:16px;margin-top:12px;" id="reviewFormWrap'+id+'">'
+    +'<div style="font-family:Nunito,sans-serif;font-size:13px;font-weight:900;color:#1a3a8b;margin-bottom:10px;">&#9998; Write a Review</div>'
+    +(curUser
+      ? '<div style="font-family:Nunito,sans-serif;font-size:11px;color:#666;margin-bottom:10px;">Reviewing as <b>'+curUser.name+'</b></div>'
+      : '<div style="font-family:Nunito,sans-serif;font-size:11px;color:#e8a000;margin-bottom:10px;">&#9888; <b>Log in</b> to post a verified review. You can still review as a guest.</div>'
+    )
+    +'<div style="font-family:Nunito,sans-serif;font-size:11px;font-weight:800;color:#555;margin-bottom:6px;">Your Rating:</div>'
     +'<div class="review-stars-select" id="rstarRow'+id+'">'
-    +'<button class="rstar-btn on" data-v="1" onclick="setReviewStar('+id+',1)">★</button>'
-    +'<button class="rstar-btn on" data-v="2" onclick="setReviewStar('+id+',2)">★</button>'
-    +'<button class="rstar-btn on" data-v="3" onclick="setReviewStar('+id+',3)">★</button>'
-    +'<button class="rstar-btn on" data-v="4" onclick="setReviewStar('+id+',4)">★</button>'
-    +'<button class="rstar-btn on" data-v="5" onclick="setReviewStar('+id+',5)">★</button>'
+    +'<button class="rstar-btn on" data-v="1" onclick="setReviewStar('+id+',1)">&#9733;</button>'
+    +'<button class="rstar-btn on" data-v="2" onclick="setReviewStar('+id+',2)">&#9733;</button>'
+    +'<button class="rstar-btn on" data-v="3" onclick="setReviewStar('+id+',3)">&#9733;</button>'
+    +'<button class="rstar-btn on" data-v="4" onclick="setReviewStar('+id+',4)">&#9733;</button>'
+    +'<button class="rstar-btn on" data-v="5" onclick="setReviewStar('+id+',5)">&#9733;</button>'
     +'</div>'
-    +'<textarea id="reviewText'+id+'" placeholder="Share your experience with this product..."></textarea>'
-    +'<button class="review-submit" onclick="submitReview('+id+')">Post Review</button>'
+    +'<textarea id="reviewText'+id+'" placeholder="How was the product quality? Does it fit well? Would you recommend it?" style="width:100%;border:1.5px solid #c0d0f0;padding:10px;border-radius:8px;font-family:Lato,sans-serif;font-size:13px;resize:vertical;min-height:80px;outline:none;margin:10px 0;background:#fff;"></textarea>'
+    +'<button onclick="submitReview('+id+')" style="background:#1a3a8b;color:#fff;border:none;padding:10px 22px;border-radius:8px;font-family:Nunito,sans-serif;font-size:12px;font-weight:900;cursor:pointer;">Post Review &#9733;</button>'
     +'</div>'
     +'</div>';
   return html;
-}
-
-function toggleReviewForm(id){
-  var f=document.getElementById('reviewForm'+id);
-  if(f) f.classList.toggle('show');
 }
 
 function setReviewStar(id, val){
@@ -4181,8 +4279,8 @@ function setReviewStar(id, val){
 
 function submitReview(id){
   var txt=document.getElementById('reviewText'+id);
-  if(!txt||!txt.value.trim()){showToast('Please write something!');return;}
-  var name=curUser?curUser.name:'Anonymous';
+  if(!txt||!txt.value.trim()){showToast('Please write your review first!');return;}
+  var name=curUser?curUser.name:'Anonymous Guest';
   var review={name:name,star:_pendingReviewStar,text:txt.value.trim(),date:'Just now',verified:!!curUser};
   if(!_reviews[id]) _reviews[id]=JSON.parse(JSON.stringify(_reviews.default));
   _reviews[id].unshift(review);
@@ -4195,7 +4293,7 @@ function submitReview(id){
   }
   var sec=document.getElementById('reviewsSection'+id);
   if(sec){sec.innerHTML=buildReviewsHTML(id);}
-  showToast('Thank you for your review! ⭐');
+  showToast('Thank you for your review! &#9733;');
 }
 
 // ================================================================
