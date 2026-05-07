@@ -1171,6 +1171,7 @@ function openProduct(id){
   document.getElementById('product-back-btn').onclick=()=>nav(prevView);
 
   nav('product');
+  updateWishlistBtn();
 }
 
 // ======= RECOMMENDED & RECENT =======
@@ -1293,6 +1294,12 @@ function renderCheckout(){
   });
   document.getElementById('co-items-list').innerHTML=itemsHtml;
   document.getElementById('co-total').textContent='₦'+total.toLocaleString();
+  // Pre-fill from logged-in user profile
+  if(currentShopUser){
+    if(!document.getElementById('co-name').value&&currentShopUser.name) document.getElementById('co-name').value=currentShopUser.name;
+    if(!document.getElementById('co-phone').value&&currentShopUser.phone) document.getElementById('co-phone').value=currentShopUser.phone;
+    if(!document.getElementById('co-email').value&&currentShopUser.email) document.getElementById('co-email').value=currentShopUser.email;
+  }
 }
 
 async function placeOrder(){
@@ -1314,6 +1321,8 @@ async function placeOrder(){
     total,status:'pending',
     createdAt:serverTimestamp()
   };
+  // Link order to logged-in user account
+  if(currentShopUser) orderData.userId=currentShopUser.uid;
 
   try{
     await addDoc(collection(db,'orders'),orderData);
@@ -1415,6 +1424,7 @@ function adminTab(tab){
   if(tab==='products') renderAdminProducts();
   if(tab==='orders') renderAdminOrders();
   if(tab==='dashboard') renderAdminDashboard();
+  if(tab==='users') renderAdminUsers();
 }
 
 function renderAdminDashboard(){
@@ -1424,7 +1434,9 @@ function renderAdminDashboard(){
     <div class="stat-card"><div class="val">${products.length}</div><div class="lbl">Products</div></div>
     <div class="stat-card"><div class="val">${orders.length}</div><div class="lbl">Orders</div></div>
     <div class="stat-card"><div class="val">₦${totalRevenue.toLocaleString()}</div><div class="lbl">Revenue</div></div>
-    <div class="stat-card"><div class="val">${orders.filter(o=>o.status==='pending').length}</div><div class="lbl">Pending</div></div>`;
+    <div class="stat-card"><div class="val">${orders.filter(o=>o.status==='pending').length}</div><div class="lbl">Pending</div></div>
+    <div class="stat-card"><div class="val" id="users-stat-val">…</div><div class="lbl">Users</div></div>`;
+  getDocs(collection(db,'users')).then(snap=>{const el=document.getElementById('users-stat-val');if(el)el.textContent=snap.size;}).catch(()=>{});
 }
 
 function renderAdminProducts(){
@@ -1792,471 +1804,294 @@ function showToast(msg,dur=2500){
 
 
 // ======= USER ACCOUNT SYSTEM =======
-let currentShopUser = null; // separate from admin currentUser
-let userWishlist = [];
-let ADMIN_EMAIL = null; // will be set after admin auth to distinguish
+let currentShopUser=null;
+let userWishlist=[];
 
-// ---- Expose new globals ----
-window.showUserAuth = showUserAuth;
-window.closeUserAuth = closeUserAuth;
-window.showUAPane = showUAPane;
-window.userDoLogin = userDoLogin;
-window.userDoRegister = userDoRegister;
-window.userDoForgot = userDoForgot;
-window.openAccountPanel = openAccountPanel;
-window.closeAccountPanel = closeAccountPanel;
-window.switchAccountTab = switchAccountTab;
-window.saveUserProfile = saveUserProfile;
-window.userSignOut = userSignOut;
-window.toggleWishlist = toggleWishlist;
-window.removeFromWishlist = removeFromWishlist;
-window.renderAdminUsers = renderAdminUsers;
-
-// ---- Track the admin Firebase user UID so we don't mix up ----
-// onAuthStateChanged already sets currentUser for admin
-// We add a SEPARATE second auth listener for shop users
-// Actually we reuse the same auth instance — distinguish by Firestore 'users' doc
-
-// When Firebase auth state changes, figure out if it's a shop user or admin
-// We extend the existing onAuthStateChanged
-
-// Override: re-listen with extended logic
-onAuthStateChanged(auth, async (firebaseUser) => {
-  if (!firebaseUser) {
-    currentShopUser = null;
-    currentUser = null;
-    updateSidebarUserSection();
-    updateAuthHeaderBtn();
-    return;
+// ---- Sidebar user section ----
+function updateSidebarUserSection(){
+  const el=document.getElementById('sidebar-user-section');
+  if(!el) return;
+  if(currentShopUser){
+    const initials=(currentShopUser.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    el.innerHTML=`<div class="sidebar-user">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;font-weight:900;font-family:'Nunito',sans-serif;display:flex;align-items:center;justify-content:center;font-size:15px">${initials}</div>
+        <div><div class="user-name">${currentShopUser.name||'User'}</div><div class="user-email">${currentShopUser.email||''}</div></div>
+      </div>
+      <div class="sidebar-user-actions">
+        <button class="sidebar-user-btn" style="background:var(--primary);color:#fff" onclick="openAccountPanel();closeSidebar()"><i class="fas fa-user-circle"></i> My Account</button>
+        <button class="sidebar-user-btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border)" onclick="userSignOut()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+      </div></div>`;
+  } else {
+    el.innerHTML=`<div class="sidebar-user">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Sign in to access your account, orders &amp; wishlist</div>
+      <div class="sidebar-user-actions">
+        <button class="sidebar-user-btn" style="background:var(--primary);color:#fff" onclick="showUserAuth('login');closeSidebar()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+        <button class="sidebar-user-btn" style="background:#fff;color:var(--primary);border:1.5px solid var(--primary)" onclick="showUserAuth('signup');closeSidebar()"><i class="fas fa-user-plus"></i> Sign Up</button>
+      </div></div>`;
   }
-  // Check if this user has a 'users' document (shop user)
-  try {
-    const userDoc = await getDocs(query(collection(db,'users'), where('uid','==',firebaseUser.uid)));
-    if (!userDoc.empty) {
-      // Shop user
-      const data = userDoc.docs[0].data();
-      currentShopUser = { uid: firebaseUser.uid, docId: userDoc.docs[0].id, ...data };
-      currentUser = null; // not admin
+}
+
+function updateAuthHeaderBtn(){
+  const btn=document.getElementById('auth-btn');
+  if(!btn) return;
+  if(currentShopUser){btn.innerHTML='<i class="fas fa-user-check"></i>';btn.title='My Account';}
+  else if(currentUser){btn.innerHTML='<i class="fas fa-user-shield"></i>';btn.title='Admin';}
+  else{btn.innerHTML='<i class="fas fa-user"></i>';btn.title='Sign In';}
+}
+document.getElementById('auth-btn').onclick=function(){
+  if(currentShopUser){openAccountPanel();return;}
+  if(currentUser){nav('admin');return;}
+  showUserAuth('login');
+};
+
+// ---- Auth state (replaces original listener) ----
+onAuthStateChanged(auth,async(firebaseUser)=>{
+  if(!firebaseUser){
+    currentShopUser=null; currentUser=null;
+    updateSidebarUserSection(); updateAuthHeaderBtn(); return;
+  }
+  try{
+    const snap=await getDocs(query(collection(db,'users'),where('uid','==',firebaseUser.uid)));
+    if(!snap.empty){
+      const d=snap.docs[0];
+      currentShopUser={uid:firebaseUser.uid,docId:d.id,...d.data()};
+      currentUser=null;
       closeUserAuth();
       loadUserWishlist();
       updateSidebarUserSection();
       updateAuthHeaderBtn();
     } else {
-      // Admin (no users doc)
-      currentUser = firebaseUser;
-      currentShopUser = null;
-      const btn = document.getElementById('auth-btn');
+      currentUser=firebaseUser; currentShopUser=null;
+      const btn=document.getElementById('auth-btn');
       if(btn) btn.innerHTML='<i class="fas fa-user-shield"></i>';
-      closeAuth();
-      nav('admin');
+      closeAuth(); nav('admin');
     }
-  } catch(e) {
-    // Fallback: treat as admin if no users collection access
-    currentUser = firebaseUser;
-    updateAuthHeaderBtn();
+  }catch(e){
+    currentUser=firebaseUser; updateAuthHeaderBtn();
   }
 });
 
-function updateAuthHeaderBtn(){
-  const btn = document.getElementById('auth-btn');
-  if(!btn) return;
-  if(currentShopUser){
-    btn.innerHTML='<i class="fas fa-user-check"></i>';
-    btn.title='My Account';
-  } else if(currentUser){
-    btn.innerHTML='<i class="fas fa-user-shield"></i>';
-    btn.title='Admin';
-  } else {
-    btn.innerHTML='<i class="fas fa-user"></i>';
-    btn.title='Sign In';
-  }
-}
-
-// Override auth-btn click to open user account or user login
-document.getElementById('auth-btn').onclick = function(){
-  if(currentShopUser){ openAccountPanel(); return; }
-  if(currentUser){ nav('admin'); return; }
-  showUserAuth('login');
-};
-
-// ---- SIDEBAR USER SECTION ----
-function updateSidebarUserSection(){
-  const el = document.getElementById('sidebar-user-section');
-  if(!el) return;
-  if(currentShopUser){
-    const initials = (currentShopUser.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-    el.innerHTML = `<div class="sidebar-user">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-        <div style="width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;font-weight:900;font-family:'Nunito',sans-serif;display:flex;align-items:center;justify-content:center;font-size:15px">${initials}</div>
-        <div>
-          <div class="user-name">${currentShopUser.name||'User'}</div>
-          <div class="user-email">${currentShopUser.email||''}</div>
-        </div>
-      </div>
-      <div class="sidebar-user-actions">
-        <button class="sidebar-user-btn" style="background:var(--primary);color:#fff" onclick="openAccountPanel();closeSidebar()"><i class="fas fa-user-circle"></i> My Account</button>
-        <button class="sidebar-user-btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border)" onclick="userSignOut()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
-      </div>
-    </div>`;
-  } else {
-    el.innerHTML = `<div class="sidebar-user">
-      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Sign in to access your account, orders & wishlist</div>
-      <div class="sidebar-user-actions">
-        <button class="sidebar-user-btn" style="background:var(--primary);color:#fff" onclick="showUserAuth('login');closeSidebar()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-        <button class="sidebar-user-btn" style="background:#fff;color:var(--primary);border:1.5px solid var(--primary)" onclick="showUserAuth('signup');closeSidebar()"><i class="fas fa-user-plus"></i> Sign Up</button>
-      </div>
-    </div>`;
-  }
-}
-updateSidebarUserSection();
-
-// ---- USER AUTH ----
-function showUserAuth(pane='login'){
+// ---- User Auth UI ----
+function showUserAuth(pane){
   document.getElementById('user-auth-overlay').classList.add('open');
-  showUAPane(pane);
+  showUAPane(pane||'login');
 }
-function closeUserAuth(){
-  document.getElementById('user-auth-overlay').classList.remove('open');
-}
+function closeUserAuth(){document.getElementById('user-auth-overlay').classList.remove('open');}
 function showUAPane(pane){
   ['login','signup','forgot'].forEach(p=>{
-    document.getElementById('ua-'+p+'-pane').style.display = p===pane ? '' : 'none';
+    document.getElementById('ua-'+p+'-pane').style.display=p===pane?'':'none';
   });
-  // clear errors
   ['ua-login-err','ua-reg-err','ua-forgot-err'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el){el.style.display='none';el.textContent='';}
+    if(el){el.style.display='none';el.textContent='';el.style.color='';}
   });
 }
-
 async function userDoLogin(){
-  const email = document.getElementById('ua-login-email').value.trim();
-  const pass = document.getElementById('ua-login-pass').value;
-  const errEl = document.getElementById('ua-login-err');
-  errEl.style.display='none';
-  if(!email||!pass){errEl.textContent='Please fill all fields';errEl.style.display='block';return;}
-  try{
-    await signInWithEmailAndPassword(auth, email, pass);
-    // onAuthStateChanged will handle the rest
-  }catch(e){
-    errEl.textContent = e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found' ? 'Invalid email or password' : 'Sign in failed. Try again.';
-    errEl.style.display='block';
-  }
+  const email=document.getElementById('ua-login-email').value.trim();
+  const pass=document.getElementById('ua-login-pass').value;
+  const err=document.getElementById('ua-login-err');
+  err.style.display='none';
+  if(!email||!pass){err.textContent='Please fill all fields';err.style.display='block';return;}
+  try{await signInWithEmailAndPassword(auth,email,pass);}
+  catch(e){err.textContent=e.code.includes('invalid-credential')||e.code.includes('wrong-password')||e.code.includes('user-not-found')?'Invalid email or password':'Sign in failed. Try again.';err.style.display='block';}
 }
-
 async function userDoRegister(){
-  const name = document.getElementById('ua-reg-name').value.trim();
-  const email = document.getElementById('ua-reg-email').value.trim();
-  const phone = document.getElementById('ua-reg-phone').value.trim();
-  const pass = document.getElementById('ua-reg-pass').value;
-  const errEl = document.getElementById('ua-reg-err');
-  errEl.style.display='none';
-  if(!name||!email||!phone||!pass){errEl.textContent='Please fill all fields';errEl.style.display='block';return;}
-  if(pass.length<6){errEl.textContent='Password must be at least 6 characters';errEl.style.display='block';return;}
+  const name=document.getElementById('ua-reg-name').value.trim();
+  const email=document.getElementById('ua-reg-email').value.trim();
+  const phone=document.getElementById('ua-reg-phone').value.trim();
+  const pass=document.getElementById('ua-reg-pass').value;
+  const err=document.getElementById('ua-reg-err');
+  err.style.display='none';
+  if(!name||!email||!phone||!pass){err.textContent='Please fill all fields';err.style.display='block';return;}
+  if(pass.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return;}
   try{
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(cred.user, {displayName: name});
-    // Save user profile to Firestore
-    await addDoc(collection(db,'users'),{
-      uid: cred.user.uid,
-      name, email, phone,
-      createdAt: serverTimestamp()
-    });
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await updateProfile(cred.user,{displayName:name});
+    await addDoc(collection(db,'users'),{uid:cred.user.uid,name,email,phone,createdAt:serverTimestamp()});
     showToast('Account created! Welcome, '+name+' 🎉');
   }catch(e){
-    errEl.textContent = e.code==='auth/email-already-in-use' ? 'Email already registered. Sign in instead.' : 'Registration failed. Try again.';
-    errEl.style.display='block';
+    err.textContent=e.code==='auth/email-already-in-use'?'Email already registered. Sign in instead.':'Registration failed: '+e.message;
+    err.style.display='block';
   }
 }
-
 async function userDoForgot(){
-  const email = document.getElementById('ua-forgot-email').value.trim();
-  const errEl = document.getElementById('ua-forgot-err');
-  errEl.style.display='none';
-  if(!email){errEl.textContent='Enter your email';errEl.style.display='block';return;}
+  const email=document.getElementById('ua-forgot-email').value.trim();
+  const err=document.getElementById('ua-forgot-err');
+  err.style.display='none';
+  if(!email){err.textContent='Enter your email';err.style.display='block';return;}
   try{
-    await sendPasswordResetEmail(auth, email);
-    errEl.style.display='block';
-    errEl.style.color='#16a34a';
-    errEl.textContent='Reset link sent! Check your email.';
-  }catch(e){
-    errEl.textContent='Could not send reset email. Check the address.';
-    errEl.style.display='block';
-  }
+    await sendPasswordResetEmail(auth,email);
+    err.textContent='Reset link sent! Check your email.';
+    err.style.color='#16a34a';
+    err.style.display='block';
+  }catch(e){err.textContent='Could not send reset email. Check the address.';err.style.display='block';}
 }
-
 async function userSignOut(){
   await signOut(auth);
-  currentShopUser = null;
-  userWishlist = [];
-  updateSidebarUserSection();
-  updateAuthHeaderBtn();
+  currentShopUser=null; userWishlist=[];
+  updateSidebarUserSection(); updateAuthHeaderBtn();
   closeAccountPanel();
   showToast('Signed out successfully');
 }
 
-// ---- MY ACCOUNT PANEL ----
+// ---- My Account Panel ----
 function openAccountPanel(){
   if(!currentShopUser){showUserAuth('login');return;}
-  // Populate profile fields
-  document.getElementById('acct-name').value = currentShopUser.name||'';
-  document.getElementById('acct-email').value = currentShopUser.email||'';
-  document.getElementById('acct-phone').value = currentShopUser.phone||'';
-  const initials = (currentShopUser.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('acct-avatar').textContent = initials;
+  document.getElementById('acct-name').value=currentShopUser.name||'';
+  document.getElementById('acct-email').value=currentShopUser.email||'';
+  document.getElementById('acct-phone').value=currentShopUser.phone||'';
+  const initials=(currentShopUser.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('acct-avatar').textContent=initials;
   document.getElementById('account-panel').classList.add('open');
   switchAccountTab('profile');
 }
-function closeAccountPanel(){
-  document.getElementById('account-panel').classList.remove('open');
-}
+function closeAccountPanel(){document.getElementById('account-panel').classList.remove('open');}
 function switchAccountTab(tab){
-  document.querySelectorAll('.account-tab').forEach((btn,i)=>{
-    const tabs=['profile','orders','wishlist'];
-    btn.classList.toggle('active', tabs[i]===tab);
-  });
+  const tabs=['profile','orders','wishlist'];
+  document.querySelectorAll('.account-tab').forEach((btn,i)=>btn.classList.toggle('active',tabs[i]===tab));
   document.querySelectorAll('.account-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('acct-'+tab).classList.add('active');
   if(tab==='orders') renderAccountOrders();
   if(tab==='wishlist') renderAccountWishlist();
 }
-
 async function saveUserProfile(){
-  const name = document.getElementById('acct-name').value.trim();
-  const phone = document.getElementById('acct-phone').value.trim();
-  const errEl = document.getElementById('acct-save-err');
-  errEl.style.display='none';
-  if(!name){errEl.textContent='Name is required';errEl.style.display='block';return;}
+  const name=document.getElementById('acct-name').value.trim();
+  const phone=document.getElementById('acct-phone').value.trim();
+  const err=document.getElementById('acct-save-err');
+  err.style.display='none';
+  if(!name){err.textContent='Name is required';err.style.display='block';return;}
   try{
     await updateDoc(doc(db,'users',currentShopUser.docId),{name,phone});
     currentShopUser.name=name; currentShopUser.phone=phone;
-    const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
     document.getElementById('acct-avatar').textContent=initials;
     updateSidebarUserSection();
     showToast('Profile updated ✓');
-  }catch(e){errEl.textContent='Failed to save. Try again.';errEl.style.display='block';}
+  }catch(e){err.textContent='Failed to save. Try again.';err.style.display='block';}
 }
 
-// ---- ACCOUNT ORDERS ----
+// ---- Account Orders ----
 function renderAccountOrders(){
-  const el = document.getElementById('acct-orders-list');
+  const el=document.getElementById('acct-orders-list');
   if(!currentShopUser){el.innerHTML='<div class="empty"><i class="fas fa-box-open"></i><h3>Sign in to view orders</h3></div>';return;}
-  const uid = currentShopUser.uid;
-  const phone = currentShopUser.phone||'';
-  const email = currentShopUser.email||'';
-  // Match by userId, phone, or email
-  const userOrders = orders.filter(o=>
-    o.userId===uid ||
-    (phone && (o.phone===phone||o.phone===phone.replace('+234','0')||o.phone===phone.replace('+',''))) ||
-    (email && o.email===email)
-  );
-  if(!userOrders.length){
-    el.innerHTML='<div class="empty"><i class="fas fa-shopping-bag"></i><h3>No orders yet</h3><p>Your order history will appear here</p></div>';
-    return;
-  }
+  const uid=currentShopUser.uid, phone=currentShopUser.phone||'', email=currentShopUser.email||'';
+  const userOrders=orders.filter(o=>o.userId===uid||(phone&&(o.phone===phone||o.phone===phone.replace('+234','0')))||(email&&o.email===email));
   const statusLabels={pending:'Pending',confirmed:'Confirmed',processing:'Processing',out:'Out for Delivery',delivered:'Delivered'};
-  el.innerHTML = userOrders.map(o=>`
+  if(!userOrders.length){el.innerHTML='<div class="empty"><i class="fas fa-shopping-bag"></i><h3>No orders yet</h3><p>Your order history will appear here</p></div>';return;}
+  el.innerHTML=userOrders.map(o=>`
     <div class="order-hist-item">
-      <strong>#${o.orderId} <span class="status-badge status-${o.status||'pending'}" style="float:right">${statusLabels[o.status||'pending']}</span></strong>
-      <div style="color:var(--muted);margin-bottom:4px">${o.items?.map(i=>''+i.name+' ×'+i.qty).join(', ')||''}</div>
-      <div style="font-weight:800;color:var(--primary);font-family:'Nunito',sans-serif">₦${Number(o.total).toLocaleString()}</div>
+      <strong>#${o.orderId} <span class="status-badge status-${o.status||'pending'}" style="float:right">${statusLabels[o.status||'pending']||o.status}</span></strong>
+      <div style="color:var(--muted);margin-bottom:4px;font-size:11px">${(o.items||[]).map(i=>i.name+' \xd7'+i.qty).join(', ')}</div>
+      <div style="font-weight:800;color:var(--primary);font-family:'Nunito',sans-serif">\u20a6${Number(o.total).toLocaleString()}</div>
       <button class="btn-outline" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="closeAccountPanel();nav('tracking');document.getElementById('track-input').value='${o.orderId}';doTrack()"><i class="fas fa-map-marker-alt"></i> Track</button>
     </div>`).join('');
 }
 
-// ---- WISHLIST ----
+// ---- Wishlist ----
 async function loadUserWishlist(){
   if(!currentShopUser) return;
   try{
-    const snap = await getDocs(query(collection(db,'wishlists'), where('userId','==',currentShopUser.uid)));
-    userWishlist = snap.docs.map(d=>({wid:d.id,...d.data()}));
+    const snap=await getDocs(query(collection(db,'wishlists'),where('userId','==',currentShopUser.uid)));
+    userWishlist=snap.docs.map(d=>({wid:d.id,...d.data()}));
     updateWishlistBtn();
   }catch(e){userWishlist=[];}
 }
-
-function isWishlisted(productId){
-  return userWishlist.some(w=>w.productId===productId);
-}
-
+function isWishlisted(productId){return userWishlist.some(w=>w.productId===productId);}
 function updateWishlistBtn(){
   if(!currentProduct) return;
-  const btn = document.getElementById('pd-wishlist-btn');
-  const label = document.getElementById('pd-wishlist-label');
+  const btn=document.getElementById('pd-wishlist-btn');
+  const lbl=document.getElementById('pd-wishlist-label');
   if(!btn) return;
-  const wishlisted = isWishlisted(currentProduct.id);
-  btn.classList.toggle('wishlisted', wishlisted);
-  if(label) label.textContent = wishlisted ? 'Saved to Wishlist ♥' : 'Save to Wishlist';
+  const saved=isWishlisted(currentProduct.id);
+  btn.classList.toggle('wishlisted',saved);
+  if(lbl) lbl.textContent=saved?'Saved to Wishlist \u2665':'Save to Wishlist';
 }
-
 async function toggleWishlist(){
   if(!currentShopUser){showUserAuth('login');showToast('Please sign in to save items');return;}
   if(!currentProduct) return;
-  const existing = userWishlist.find(w=>w.productId===currentProduct.id);
+  const existing=userWishlist.find(w=>w.productId===currentProduct.id);
   if(existing){
-    // Remove
     try{
       await deleteDoc(doc(db,'wishlists',existing.wid));
-      userWishlist = userWishlist.filter(w=>w.wid!==existing.wid);
-      showToast('Removed from wishlist');
-      updateWishlistBtn();
+      userWishlist=userWishlist.filter(w=>w.wid!==existing.wid);
+      showToast('Removed from wishlist');updateWishlistBtn();
     }catch(e){showToast('Error updating wishlist');}
   } else {
-    // Add
     try{
-      const p = currentProduct;
-      const data = {
-        userId: currentShopUser.uid,
-        productId: p.id,
-        name: p.name,
-        price: Number(p.discPrice||p.price),
-        image: p.images?.[0]||'',
-        addedAt: serverTimestamp()
-      };
-      const ref = await addDoc(collection(db,'wishlists'), data);
+      const p=currentProduct;
+      const data={userId:currentShopUser.uid,productId:p.id,name:p.name,price:Number(p.discPrice||p.price),image:p.images&&p.images[0]?p.images[0]:'',addedAt:serverTimestamp()};
+      const ref=await addDoc(collection(db,'wishlists'),data);
       userWishlist.push({wid:ref.id,...data});
-      showToast('Saved to wishlist ♥');
-      updateWishlistBtn();
+      showToast('Saved to wishlist \u2665');updateWishlistBtn();
     }catch(e){showToast('Error saving to wishlist');}
   }
 }
-
 async function removeFromWishlist(wid){
   try{
     await deleteDoc(doc(db,'wishlists',wid));
-    userWishlist = userWishlist.filter(w=>w.wid!==wid);
-    renderAccountWishlist();
-    showToast('Removed from wishlist');
+    userWishlist=userWishlist.filter(w=>w.wid!==wid);
+    renderAccountWishlist();showToast('Removed from wishlist');
   }catch(e){showToast('Error removing item');}
 }
-
 function renderAccountWishlist(){
-  const el = document.getElementById('acct-wishlist-list');
+  const el=document.getElementById('acct-wishlist-list');
   if(!currentShopUser){el.innerHTML='<div class="empty"><i class="fas fa-heart"></i><h3>Sign in to view wishlist</h3></div>';return;}
-  if(!userWishlist.length){
-    el.innerHTML='<div class="empty"><i class="fas fa-heart"></i><h3>Your wishlist is empty</h3><p>Tap "Save to Wishlist" on any product</p></div>';
-    return;
-  }
-  el.innerHTML = userWishlist.map(w=>`
+  if(!userWishlist.length){el.innerHTML='<div class="empty"><i class="fas fa-heart"></i><h3>Your wishlist is empty</h3><p>Tap "Save to Wishlist" on any product</p></div>';return;}
+  el.innerHTML=userWishlist.map(w=>`
     <div class="wishlist-item">
       <img src="${w.image}" onerror="this.src=''" alt="${w.name}"/>
       <div class="wishlist-item-body">
         <div class="wishlist-item-name">${w.name}</div>
-        <div class="wishlist-item-price">₦${Number(w.price).toLocaleString()}</div>
+        <div class="wishlist-item-price">\u20a6${Number(w.price).toLocaleString()}</div>
         <button class="btn-cart" style="margin-top:4px;font-size:11px;padding:4px 8px" onclick="closeAccountPanel();openProduct('${w.productId}')"><i class="fas fa-eye"></i> View</button>
       </div>
       <button class="wishlist-remove" onclick="removeFromWishlist('${w.wid}')" title="Remove"><i class="fas fa-times-circle"></i></button>
     </div>`).join('');
 }
 
-// ---- ADMIN: VIEW ALL USERS ----
+// ---- Admin: View All Users ----
 async function renderAdminUsers(){
-  const el = document.getElementById('admin-users-list');
+  const el=document.getElementById('admin-users-list');
   if(!el) return;
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   try{
-    const snap = await getDocs(query(collection(db,'users'),orderBy('createdAt','desc')));
-    const users = snap.docs.map(d=>({uid:d.id,...d.data()}));
-    if(!users.length){el.innerHTML='<div class="empty"><i class="fas fa-users"></i><h3>No registered users</h3></div>';return;}
-    el.innerHTML = users.map(u=>{
-      const userOrders = orders.filter(o=>o.userId===u.uid||(u.phone&&o.phone===u.phone)||(u.email&&o.email===u.email));
+    const snap=await getDocs(query(collection(db,'users'),orderBy('createdAt','desc')));
+    const users=snap.docs.map(d=>({docId:d.id,...d.data()}));
+    if(!users.length){el.innerHTML='<div class="empty"><i class="fas fa-users"></i><h3>No registered users yet</h3></div>';return;}
+    el.innerHTML=users.map(u=>{
+      const uOrders=orders.filter(o=>o.userId===u.uid||(u.phone&&o.phone===u.phone)||(u.email&&o.email===u.email));
+      const joinDate=u.createdAt&&u.createdAt.toDate?u.createdAt.toDate().toLocaleDateString():'—';
+      const wCount=userWishlist.filter(w=>w.userId===u.uid).length;
       return `<div class="order-row">
-        <strong style="font-size:13px">${u.name||'Unknown'}</strong>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${u.email||''} | ${u.phone||''}</div>
-        <div style="font-size:11px;margin-bottom:4px"><b>${userOrders.length}</b> order(s) | Joined: ${u.createdAt?.toDate?.()?.toLocaleDateString()||'—'}</div>
-        ${userOrders.length ? '<div style="font-size:11px;color:var(--muted)">Orders: '+userOrders.map(o=>'#'+o.orderId).join(', ')+'</div>' : ''}
+        <strong style="font-size:13px">${u.name||'—'}</strong>
+        <div style="font-size:11px;color:var(--muted);margin:2px 0">${u.email||''} | ${u.phone||''}</div>
+        <div style="font-size:11px;margin-bottom:4px">Orders: <b>${uOrders.length}</b> &nbsp;|&nbsp; Joined: ${joinDate}</div>
+        ${uOrders.length?`<div style="font-size:11px;color:var(--muted)">IDs: ${uOrders.map(o=>'#'+o.orderId).join(', ')}</div>`:''}
       </div>`;
     }).join('');
-  }catch(e){el.innerHTML='<div class="empty"><h3>Error loading users</h3></div>';}
+  }catch(e){el.innerHTML='<div class="empty"><h3>Error loading users</h3><p>'+e.message+'</p></div>';}
 }
 
-// ---- PATCH placeOrder to link orders to user ----
-const _origPlaceOrder = placeOrder;
-window.placeOrder = async function(){
-  // Inject userId into order before placing
-  const origAddDoc = window._addDocOrig || addDoc;
-  // We patch by adding userId to the order data right before saving
-  // This is done inline in the patched placeOrder below
-  await patchedPlaceOrder();
-};
+// ---- Expose new globals ----
+window.showUserAuth=showUserAuth;
+window.closeUserAuth=closeUserAuth;
+window.showUAPane=showUAPane;
+window.userDoLogin=userDoLogin;
+window.userDoRegister=userDoRegister;
+window.userDoForgot=userDoForgot;
+window.openAccountPanel=openAccountPanel;
+window.closeAccountPanel=closeAccountPanel;
+window.switchAccountTab=switchAccountTab;
+window.saveUserProfile=saveUserProfile;
+window.userSignOut=userSignOut;
+window.toggleWishlist=toggleWishlist;
+window.removeFromWishlist=removeFromWishlist;
+window.renderAdminUsers=renderAdminUsers;
+window.updateWishlistBtn=updateWishlistBtn;
 
-async function patchedPlaceOrder(){
-  const name=document.getElementById('co-name').value.trim();
-  const phone=document.getElementById('co-phone').value.trim();
-  const email=document.getElementById('co-email').value.trim();
-  const address=document.getElementById('co-address').value.trim();
-  const payment=document.querySelector('input[name=payment]:checked')?.value||'bank';
-  if(!name||!phone||!address){showToast('Please fill required fields');return;}
-  if(!cart.length){showToast('Cart is empty');return;}
-  const total=cart.reduce((a,c)=>a+c.price*c.qty,0);
-  const orderId='BNM'+Date.now().toString().slice(-8);
-  const orderData={
-    orderId,name,phone,email,address,payment,
-    items:cart.map(c=>({...c})),
-    total,status:'pending',
-    createdAt:serverTimestamp()
-  };
-  // Link to user account if logged in
-  if(currentShopUser){
-    orderData.userId = currentShopUser.uid;
-    // Pre-fill checkout fields if empty
-  }
-  try{
-    await addDoc(collection(db,'orders'),orderData);
-    const waText=encodeURIComponent('🛍 NEW ORDER from BENIM Trade!\n\nOrder ID: '+orderId+'\nCustomer: '+name+'\nPhone: '+phone+'\nAddress: '+address+'\nPayment: '+(payment==='bank'?'Bank Transfer':'Pay on Delivery')+'\n\nItems:\n'+cart.map(c=>'• '+c.name+' ×'+c.qty+' = ₦'+(c.price*c.qty).toLocaleString()).join('\n')+'\n\nTotal: ₦'+total.toLocaleString());
-    window.open('https://wa.me/2349168031213?text='+waText,'_blank');
-    showReceipt({orderId,name,phone,address,payment,items:[...cart],total});
-    cart=[];saveCart();
-  }catch(err){
-    showToast('Error placing order. Try again.');
-    console.error(err);
-  }
-}
-
-// Pre-fill checkout from user profile
-const _origRenderCheckout = renderCheckout;
-function renderCheckout(){
-  _origRenderCheckout();
-  if(currentShopUser){
-    if(!document.getElementById('co-name').value && currentShopUser.name)
-      document.getElementById('co-name').value = currentShopUser.name;
-    if(!document.getElementById('co-phone').value && currentShopUser.phone)
-      document.getElementById('co-phone').value = currentShopUser.phone;
-    if(!document.getElementById('co-email').value && currentShopUser.email)
-      document.getElementById('co-email').value = currentShopUser.email;
-  }
-}
-window.renderCheckout = renderCheckout;
-
-// Update openProduct to refresh wishlist button state
-const _origOpenProduct = openProduct;
-window.openProduct = function(id){
-  _origOpenProduct(id);
-  setTimeout(updateWishlistBtn, 50);
-};
-
-// Patch adminTab to handle users
-const _origAdminTab = adminTab;
-window.adminTab = function(tab){
-  _origAdminTab(tab);
-  if(tab==='users') renderAdminUsers();
-};
-
-// Update admin dashboard stats to include users count
-const _origRenderAdminDashboard = renderAdminDashboard;
-window.renderAdminDashboard = function(){
-  _origRenderAdminDashboard();
-  // Add users stat
-  getDocs(collection(db,'users')).then(snap=>{
-    const stats = document.getElementById('admin-stats');
-    if(stats && !document.getElementById('users-stat')){
-      const div = document.createElement('div');
-      div.className='stat-card'; div.id='users-stat';
-      div.innerHTML='<div class="val">'+snap.size+'</div><div class="lbl">Users</div>';
-      stats.appendChild(div);
-    }
-  }).catch(()=>{});
-};
-
+// Init sidebar user section
+updateSidebarUserSection();
 
 // Init
 history.replaceState({view:'home'},'','#home');
