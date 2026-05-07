@@ -93,8 +93,8 @@ ul{list-style:none}
 .timer-sep{font-weight:900;color:var(--primary)}
 
 /* ============ PRODUCT GRID ============ */
-.products-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-@media(min-width:480px){.products-grid{grid-template-columns:repeat(3,1fr)}}
+.products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(min-width:640px){.products-grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:768px){.products-grid{grid-template-columns:repeat(4,1fr)}}
 @media(min-width:1024px){.products-grid{grid-template-columns:repeat(5,1fr)}}
 .product-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:.2s;position:relative}
@@ -236,6 +236,7 @@ ul{list-style:none}
 .chat-foot{padding:10px;display:flex;gap:6px;border-top:1px solid var(--border);background:#fff}
 .chat-foot input{flex:1;border:1.5px solid var(--border);border-radius:20px;padding:8px 12px;font-size:13px}
 .chat-foot button{background:var(--primary);color:#fff;border-radius:50%;width:34px;height:34px;font-size:15px;display:flex;align-items:center;justify-content:center}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
 /* ============ LOGIN / AUTH ============ */
 .auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:center;justify-content:center}
@@ -1452,66 +1453,224 @@ async function logoutAdmin(){
   showToast('Logged out');
 }
 
-// ======= CHATBOT =======
-const chatHistory=[];
+// ======= CHATBOT (100% FREE — LOCAL RULE-BASED, NO API) =======
+const CHAT_STORAGE_KEY='benim_chat_history';
+let chatSessionHistory=[];
+
+// Load saved session from localStorage
+(function loadChatHistory(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY)||'[]');
+    chatSessionHistory=saved;
+    const el=document.getElementById('chat-messages');
+    // Replay saved messages into UI (skip the default greeting if history exists)
+    if(saved.length){
+      el.innerHTML='';
+      saved.forEach(m=>_appendMsgDOM(m.text,m.type,false));
+    }
+  }catch(e){chatSessionHistory=[];}
+})();
+
+function saveChatHistory(){
+  // Keep only last 40 messages to avoid localStorage bloat
+  if(chatSessionHistory.length>40) chatSessionHistory=chatSessionHistory.slice(-40);
+  try{localStorage.setItem(CHAT_STORAGE_KEY,JSON.stringify(chatSessionHistory));}catch(e){}
+}
+
 function toggleChat(){
   const w=document.getElementById('chat-window');
   w.classList.toggle('open');
-  if(w.classList.contains('open')) document.getElementById('chat-input').focus();
+  if(w.classList.contains('open')){
+    document.getElementById('chat-input').focus();
+    const msgs=document.getElementById('chat-messages');
+    msgs.scrollTop=msgs.scrollHeight;
+  }
 }
 
-async function sendChat(){
+function sendChat(){
   const input=document.getElementById('chat-input');
   const msg=input.value.trim();
   if(!msg) return;
   input.value='';
   appendMsg(msg,'user');
-  chatHistory.push({role:'user',content:msg});
 
-  // Build system prompt with product data
-  const productList=products.slice(0,30).map(p=>`- ${p.name} (${p.category}): ₦${Number(p.discPrice||p.price).toLocaleString()}, Stock: ${p.stock}`).join('\n');
-  const systemPrompt=`You are BENIM Assistant, a helpful shopping assistant for BENIM Trade, a Nigerian e-commerce store. Be friendly, concise, and helpful. You can help customers find products, answer delivery and payment questions, and assist with orders.
-
-Store Info:
-- Name: BENIM Trade
-- Payment: Bank Transfer (Opay: 9168031213, Adewole Aderonke Aishat) or Pay on Delivery
-- WhatsApp: +2349168031213
-- Delivery: Free delivery available
-- Orders can be tracked by Order ID or phone number
-
-Current Products:
-${productList}
-
-Help customers find products, understand payment options, track orders, and make purchase decisions. Keep responses brief and helpful.`;
-
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:300,
-        system:systemPrompt,
-        messages:chatHistory
-      })
-    });
-    const data=await res.json();
-    const reply=data.content?.[0]?.text||"I'm having trouble responding right now. Please WhatsApp us at +2349168031213 for help.";
+  // Simulate human-like typing delay (300–700ms)
+  const delay=300+Math.random()*400;
+  const typingId=showTyping();
+  setTimeout(()=>{
+    removeTyping(typingId);
+    const reply=getBotReply(msg);
     appendMsg(reply,'bot');
-    chatHistory.push({role:'assistant',content:reply});
-  }catch(e){
-    appendMsg("Sorry, I'm having trouble connecting. Please WhatsApp us at +2349168031213 for help!",'bot');
-  }
+  },delay);
 }
 
+// ---- TYPING INDICATOR ----
+function showTyping(){
+  const el=document.getElementById('chat-messages');
+  const id='typing-'+Date.now();
+  const div=document.createElement('div');
+  div.className='msg bot';div.id=id;
+  div.innerHTML='<span style="letter-spacing:2px;font-size:18px">···</span>';
+  el.appendChild(div);el.scrollTop=el.scrollHeight;
+  return id;
+}
+function removeTyping(id){
+  const el=document.getElementById(id);
+  if(el) el.remove();
+}
+
+// ---- APPEND MESSAGE ----
 function appendMsg(text,type){
+  _appendMsgDOM(text,type,true);
+  chatSessionHistory.push({text,type});
+  saveChatHistory();
+}
+function _appendMsgDOM(text,type,animate){
   const el=document.getElementById('chat-messages');
   const div=document.createElement('div');
-  div.className=`msg ${type}`;
-  div.textContent=text;
+  div.className='msg '+type;
+  // Support HTML in bot messages for product cards
+  if(type==='bot') div.innerHTML=text;
+  else div.textContent=text;
+  if(animate) div.style.animation='fadeInUp .25s ease';
   el.appendChild(div);
   el.scrollTop=el.scrollHeight;
 }
+
+// ---- CORE BOT LOGIC ----
+function getBotReply(raw){
+  const msg=raw.toLowerCase().trim();
+  const words=msg.split(/\s+/);
+
+  // ---- GREETINGS ----
+  if(/^(hi|hello|hey|good morning|good afternoon|good evening|hy|howdy|sup|yo)\b/.test(msg)){
+    const greets=["Hello! 😊 Welcome to BENIM Trade. How can I help you today?","Hi there! 👋 I'm your BENIM shopping assistant. What are you looking for?","Hey! Welcome 😊 I can help you find products, place orders, or track deliveries. What do you need?"];
+    return pick(greets);
+  }
+
+  // ---- THANKS ----
+  if(/thank|thanks|thank you|thx|appreciate/.test(msg)){
+    return "You're welcome! 😊 Is there anything else I can help you with?";
+  }
+
+  // ---- HOW ARE YOU ----
+  if(/how are you|how r u|how do you do/.test(msg)){
+    return "I'm doing great, thanks for asking! 😄 Ready to help you shop. What are you looking for today?";
+  }
+
+  // ---- ORDER TRACKING ----
+  if(/track|where is my order|order status|check my order/.test(msg)){
+    // Try to extract order ID (BNM + digits) or phone number
+    const orderIdMatch=raw.match(/BNM\d+/i);
+    const phoneMatch=raw.match(/0\d{9,10}|\+234\d{9,10}/);
+    if(orderIdMatch||phoneMatch){
+      const val=orderIdMatch?orderIdMatch[0]:phoneMatch[0];
+      const found=orders.filter(o=>o.orderId===val||o.phone===val||o.phone===val.replace('+234','0'));
+      if(found.length){
+        const statusLabels={pending:'⏳ Pending',confirmed:'✅ Confirmed',processing:'⚙️ Processing',out:'🚚 Out for Delivery',delivered:'📦 Delivered'};
+        return found.map(o=>`<b>Order #${o.orderId}</b><br>Status: ${statusLabels[o.status||'pending']||o.status}<br>Total: ₦${Number(o.total).toLocaleString()}`).join('<br><br>');
+      } else {
+        return `I couldn't find an order matching <b>${val}</b>. Please double-check and try again, or contact us on WhatsApp: <b>+2349168031213</b> 📞`;
+      }
+    }
+    return "To track your order, please tell me your <b>Order ID</b> (e.g. BNM12345678) or the <b>phone number</b> you used to order. 📦";
+  }
+
+  // ---- PAYMENT ----
+  if(/pay on delivery|payment|how to pay|payment method|pay online|transfer|bank|opay/.test(msg)){
+    return "💳 <b>We offer 2 payment options:</b><br><br>1️⃣ <b>Bank Transfer (Opay)</b><br>• Account: 9168031213<br>• Name: Adewole Aderonke Aishat<br>• Phone: +2349168031213<br><br>2️⃣ <b>Pay on Delivery</b> — Pay cash when your item arrives!<br><br>Both are 100% safe 😊";
+  }
+
+  // ---- DELIVERY ----
+  if(/delivery|shipping|how long|when will|dispatch|arrival|how soon|fast/.test(msg)){
+    return "🚚 <b>Delivery Info:</b><br>• We deliver across Nigeria<br>• Delivery is <b>FREE</b> on all orders<br>• Estimated: 1–3 business days depending on your location<br>• You'll get a WhatsApp update when your order ships!";
+  }
+
+  // ---- HOW TO ORDER ----
+  if(/how (do i|to|can i) order|how (do i|to|can i) buy|place (an )?order|ordering process|steps to order|purchase/.test(msg)){
+    return "🛒 <b>How to Order:</b><br><br>1️⃣ Browse or search for your product<br>2️⃣ Click on it to open the product page<br>3️⃣ Tap <b>Add to Cart</b> or <b>Buy Now</b><br>4️⃣ Go to Checkout<br>5️⃣ Enter your name, phone & address<br>6️⃣ Choose payment method<br>7️⃣ Tap <b>Place Order</b> — done! ✅<br><br>You'll get an order receipt instantly.";
+  }
+
+  // ---- RETURN / REFUND ----
+  if(/return|refund|exchange|damaged|wrong item|complaint/.test(msg)){
+    return "🔄 <b>Returns & Refunds:</b><br>• Contact us within 24 hours of delivery for damaged or wrong items<br>• WhatsApp us: <b>+2349168031213</b> with your order ID and photos<br>• We'll resolve it quickly! 😊";
+  }
+
+  // ---- CONTACT / WHATSAPP ----
+  if(/contact|whatsapp|phone|call|reach|support|help/.test(msg)){
+    return "📞 <b>Contact BENIM Trade:</b><br>• WhatsApp: <a href='https://wa.me/2349168031213' target='_blank' style='color:var(--primary)'>+2349168031213</a><br>• We reply within minutes on WhatsApp!";
+  }
+
+  // ---- DISCOUNT / PROMO ----
+  if(/discount|promo|coupon|offer|deals|sale|flash sale|cheap/.test(msg)){
+    const flashProds=products.filter(p=>p.flash=='1'||p.flash===1);
+    if(flashProds.length){
+      return `🔥 <b>We have ${flashProds.length} Flash Sale item(s) right now!</b><br>${flashProds.slice(0,3).map(p=>`• ${p.name} — ₦${Number(p.discPrice||p.price).toLocaleString()}`).join('<br>')}<br><br>Tap "Flash Sales" on the homepage to see all deals!`;
+    }
+    return "🔥 We regularly run flash sales and promos! Check the <b>Flash Sales</b> section on the homepage for current deals.";
+  }
+
+  // ---- PRODUCT SEARCH (keyword match against live products) ----
+  // Extract possible product keywords (2+ char words, remove stopwords)
+  const stopwords=new Set(['i','want','need','show','me','a','an','the','do','you','have','sell','looking','for','find','get','buy','got','any','some','please','pls','can','is','are','what','where','how','much','price','cost','how much','cheap','good']);
+  const searchWords=words.filter(w=>w.length>1&&!stopwords.has(w));
+
+  if(searchWords.length){
+    const matched=products.filter(p=>{
+      const haystack=(p.name+' '+(p.category||'')+' '+(p.description||'')).toLowerCase();
+      return searchWords.some(w=>haystack.includes(w));
+    });
+
+    if(matched.length){
+      const top=matched.slice(0,4);
+      const cards=top.map(p=>{
+        const price=Number(p.discPrice&&p.discPrice>0&&p.discPrice<p.price?p.discPrice:p.price);
+        const img=p.images&&p.images[0]?`<img src='${p.images[0]}' style='width:48px;height:48px;object-fit:cover;border-radius:5px;float:left;margin-right:8px' onerror="this.style.display='none'">`:'';
+        return `<div onclick="openProduct('${p.id}')" style='cursor:pointer;background:#fff7ed;border:1px solid var(--border);border-radius:7px;padding:8px;margin-top:6px;overflow:hidden'>
+          ${img}
+          <b style='font-size:12px'>${p.name}</b><br>
+          <span style='color:var(--primary);font-weight:800;font-size:13px'>₦${price.toLocaleString()}</span>
+          ${Number(p.stock||0)===0?"<span style='color:#ef4444;font-size:10px;margin-left:4px'>Out of stock</span>":''}
+        </div>`;
+      }).join('');
+      return `🛍️ I found <b>${matched.length}</b> result(s) for "<b>${searchWords.join(' ')}</b>":<br>${cards}${matched.length>4?`<br><small style='color:var(--muted)'>...and ${matched.length-4} more. Use the search bar to see all results.</small>`:''}`;
+    } else {
+      return `😕 I couldn't find any products matching "<b>${searchWords.join(' ')}</b>".<br><br>Try browsing by category using the menu, or WhatsApp us and we'll help you find what you need: <b>+2349168031213</b>`;
+    }
+  }
+
+  // ---- PRICE QUESTION ----
+  if(/how much|price|cost/.test(msg)){
+    return "💰 To find the price of a product, just search for it in the search bar at the top or tell me the product name and I'll look it up for you!";
+  }
+
+  // ---- CATEGORIES ----
+  if(/categor|department|section|type|kind/.test(msg)){
+    const cats=[...allCategories];
+    if(cats.length) return `🗂️ <b>Our product categories:</b><br>${cats.map(c=>`• ${c}`).join('<br>')}<br><br>Tap the menu (☰) or category pills to browse!`;
+    return "🗂️ Tap the <b>☰ Categories</b> menu at the top to browse all product categories!";
+  }
+
+  // ---- OUT OF STOCK ----
+  if(/out of stock|not available|available/.test(msg)){
+    return "📦 Product availability is shown on each product page. If something is out of stock, contact us on WhatsApp: <b>+2349168031213</b> and we may be able to source it for you!";
+  }
+
+  // ---- GOODBYE ----
+  if(/bye|goodbye|see you|later|cya/.test(msg)){
+    return "Goodbye! 👋 Happy shopping at BENIM Trade. Come back anytime!";
+  }
+
+  // ---- DEFAULT ----
+  const defaults=[
+    "I'm not sure I understand that 😊 Try asking me about:<br>• A specific product (e.g. <i>\"I want shoes\"</i>)<br>• How to order<br>• Payment & delivery<br>• Tracking your order",
+    "Hmm, I didn't quite catch that! 😅 You can ask me to find products, explain how to pay, or track your order.",
+    "I'm still learning! 😊 For faster help, WhatsApp us: <b><a href='https://wa.me/2349168031213' style='color:var(--primary)'>+2349168031213</a></b>"
+  ];
+  return pick(defaults);
+}
+
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
 // ======= TOAST =======
 function showToast(msg,dur=2500){
