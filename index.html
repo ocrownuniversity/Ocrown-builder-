@@ -246,6 +246,46 @@ ul{list-style:none}
 .auth-box .form-group{margin-bottom:12px}
 .auth-err{color:#ef4444;font-size:12px;margin-top:6px;display:none}
 
+/* ============ USER ACCOUNT PANEL ============ */
+.account-panel{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:center;justify-content:center}
+.account-panel.open{display:flex}
+.account-box{background:#fff;border-radius:14px;width:360px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.account-box-head{background:var(--primary);color:#fff;padding:16px 18px;border-radius:14px 14px 0 0;display:flex;align-items:center;justify-content:space-between}
+.account-box-head h2{font-family:'Nunito',sans-serif;font-size:17px;font-weight:800}
+.account-tabs{display:flex;border-bottom:2px solid var(--border)}
+.account-tab{flex:1;padding:10px;font-size:12px;font-weight:700;text-align:center;cursor:pointer;border:none;background:#fff;color:var(--muted);transition:.2s}
+.account-tab.active{color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px}
+.account-pane{display:none;padding:18px}
+.account-pane.active{display:block}
+.account-avatar{width:60px;height:60px;border-radius:50%;background:var(--primary);color:#fff;font-size:24px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-family:'Nunito',sans-serif}
+.wishlist-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px}
+.wishlist-item img{width:54px;height:54px;object-fit:cover;border-radius:6px;background:#f3f3f3}
+.wishlist-item-body{flex:1}
+.wishlist-item-name{font-size:12px;font-weight:600;margin-bottom:2px}
+.wishlist-item-price{font-size:13px;font-weight:800;color:var(--primary);font-family:'Nunito',sans-serif}
+.wishlist-remove{background:none;border:none;color:#ef4444;font-size:13px;cursor:pointer}
+.order-hist-item{border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px}
+.order-hist-item strong{display:block;font-size:13px;margin-bottom:3px}
+/* ============ SIDEBAR USER SECTION ============ */
+.sidebar-user{padding:14px 18px;border-bottom:1px solid var(--border);background:#fff7ed}
+.sidebar-user .user-name{font-weight:700;font-size:14px;color:var(--text)}
+.sidebar-user .user-email{font-size:11px;color:var(--muted)}
+.sidebar-user-actions{display:flex;gap:8px;margin-top:8px}
+.sidebar-user-btn{flex:1;padding:6px 0;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:.2s}
+/* ============ USER AUTH FORMS ============ */
+.user-auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2100;display:none;align-items:center;justify-content:center}
+.user-auth-overlay.open{display:flex}
+.user-auth-box{background:#fff;border-radius:14px;padding:24px;width:340px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto}
+.user-auth-box h2{font-family:'Nunito',sans-serif;font-size:19px;font-weight:900;margin-bottom:14px;text-align:center}
+.auth-switch{text-align:center;font-size:12px;margin-top:12px;color:var(--muted)}
+.auth-switch a{color:var(--primary);font-weight:700;cursor:pointer}
+.auth-divider{text-align:center;font-size:11px;color:var(--muted);margin:8px 0;position:relative}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.auth-divider::before{left:0}
+.auth-divider::after{right:0}
+/* ============ WISHLIST BTN ON PRODUCT ============ */
+.wishlist-btn{background:#fff;color:#ef4444;border:2px solid #ef4444;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px}
+.wishlist-btn:hover,.wishlist-btn.wishlisted{background:#ef4444;color:#fff}
 /* ============ TOAST ============ */
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:3000;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -333,9 +373,11 @@ footer ul li a:hover{color:#fff}
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 <div class="sidebar" id="sidebar">
   <div class="sidebar-head">
-    <h3><i class="fas fa-th-large"></i> All Categories</h3>
+    <h3><i class="fas fa-th-large"></i> Menu</h3>
     <button class="close-btn" onclick="closeSidebar()"><i class="fas fa-times"></i></button>
   </div>
+  <div id="sidebar-user-section"></div>
+  <div style="padding:10px 18px 4px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Categories</div>
   <div class="sidebar-cats" id="sidebar-cats">
     <a href="#" onclick="filterCat('');closeSidebar();return false"><i class="fas fa-border-all"></i> All Products</a>
   </div>
@@ -344,7 +386,7 @@ footer ul li a:hover{color:#fff}
 <!-- ===== TOAST ===== -->
 <div class="toast" id="toast"></div>
 
-<!-- ===== AUTH OVERLAY ===== -->
+<!-- ===== ADMIN AUTH OVERLAY (unchanged) ===== -->
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-box">
     <h2><i class="fas fa-lock" style="color:var(--primary)"></i> Admin Login</h2>
@@ -359,6 +401,72 @@ footer ul li a:hover{color:#fff}
     <div class="auth-err" id="auth-err">Invalid credentials</div>
     <button class="btn-primary" style="width:100%;margin-top:8px" onclick="doLogin()">Login</button>
     <button class="btn-outline" style="width:100%;margin-top:8px" onclick="closeAuth()">Cancel</button>
+  </div>
+</div>
+
+<!-- ===== USER AUTH OVERLAY ===== -->
+<div class="user-auth-overlay" id="user-auth-overlay">
+  <div class="user-auth-box">
+    <div id="ua-login-pane">
+      <h2><i class="fas fa-user-circle" style="color:var(--primary)"></i> Sign In</h2>
+      <div class="form-group"><label>Email</label><input type="email" id="ua-login-email" placeholder="your@email.com"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="ua-login-pass" placeholder="Password"/></div>
+      <div class="auth-err" id="ua-login-err" style="display:none"></div>
+      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="userDoLogin()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <div style="text-align:right;margin-top:8px"><a style="color:var(--primary);font-size:12px;font-weight:600;cursor:pointer" onclick="showUAPane('forgot')">Forgot password?</a></div>
+      <div class="auth-switch">Don't have an account? <a onclick="showUAPane('signup')">Sign Up</a></div>
+      <button class="btn-outline" style="width:100%;margin-top:10px" onclick="closeUserAuth()">Cancel</button>
+    </div>
+    <div id="ua-signup-pane" style="display:none">
+      <h2><i class="fas fa-user-plus" style="color:var(--primary)"></i> Create Account</h2>
+      <div class="form-group"><label>Full Name *</label><input type="text" id="ua-reg-name" placeholder="Your full name"/></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="ua-reg-email" placeholder="your@email.com"/></div>
+      <div class="form-group"><label>Phone Number *</label><input type="tel" id="ua-reg-phone" placeholder="+234..."/></div>
+      <div class="form-group"><label>Password *</label><input type="password" id="ua-reg-pass" placeholder="Min 6 characters"/></div>
+      <div class="auth-err" id="ua-reg-err" style="display:none"></div>
+      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="userDoRegister()"><i class="fas fa-user-plus"></i> Create Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="showUAPane('login')">Sign In</a></div>
+      <button class="btn-outline" style="width:100%;margin-top:10px" onclick="closeUserAuth()">Cancel</button>
+    </div>
+    <div id="ua-forgot-pane" style="display:none">
+      <h2><i class="fas fa-key" style="color:var(--primary)"></i> Reset Password</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Enter your email and we'll send a password reset link.</p>
+      <div class="form-group"><label>Email</label><input type="email" id="ua-forgot-email" placeholder="your@email.com"/></div>
+      <div class="auth-err" id="ua-forgot-err" style="display:none"></div>
+      <button class="btn-primary" style="width:100%;margin-top:8px" onclick="userDoForgot()"><i class="fas fa-paper-plane"></i> Send Reset Link</button>
+      <div class="auth-switch"><a onclick="showUAPane('login')">Back to Sign In</a></div>
+      <button class="btn-outline" style="width:100%;margin-top:10px" onclick="closeUserAuth()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MY ACCOUNT PANEL ===== -->
+<div class="account-panel" id="account-panel">
+  <div class="account-box">
+    <div class="account-box-head">
+      <h2><i class="fas fa-user-circle"></i> My Account</h2>
+      <button style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer" onclick="closeAccountPanel()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="account-tabs">
+      <button class="account-tab active" onclick="switchAccountTab('profile')"><i class="fas fa-user"></i> Profile</button>
+      <button class="account-tab" onclick="switchAccountTab('orders')"><i class="fas fa-box"></i> Orders</button>
+      <button class="account-tab" onclick="switchAccountTab('wishlist')"><i class="fas fa-heart"></i> Wishlist</button>
+    </div>
+    <div class="account-pane active" id="acct-profile">
+      <div class="account-avatar" id="acct-avatar">U</div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="acct-name" placeholder="Your name"/></div>
+      <div class="form-group"><label>Email</label><input type="email" id="acct-email" placeholder="your@email.com"/></div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="acct-phone" placeholder="+234..."/></div>
+      <div class="auth-err" id="acct-save-err" style="display:none"></div>
+      <button class="btn-primary" style="width:100%;margin-top:4px" onclick="saveUserProfile()"><i class="fas fa-save"></i> Save Changes</button>
+      <button class="btn-outline" style="width:100%;margin-top:8px" onclick="userSignOut()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+    </div>
+    <div class="account-pane" id="acct-orders">
+      <div id="acct-orders-list"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="account-pane" id="acct-wishlist">
+      <div id="acct-wishlist-list"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
   </div>
 </div>
 
@@ -506,6 +614,9 @@ footer ul li a:hover{color:#fff}
       <button class="btn-outline" onclick="addToCartDetail()"><i class="fas fa-cart-plus"></i> Add to Cart</button>
       <button class="btn-primary" onclick="buyNow()"><i class="fas fa-bolt"></i> Buy Now</button>
     </div>
+    <button class="wishlist-btn" id="pd-wishlist-btn" onclick="toggleWishlist()" style="width:100%;margin-bottom:14px">
+      <i class="fas fa-heart"></i> <span id="pd-wishlist-label">Save to Wishlist</span>
+    </button>
     <div class="product-desc" id="pd-desc"></div>
     <!-- Related -->
     <div class="section-head" style="margin-bottom:10px">
@@ -641,6 +752,7 @@ footer ul li a:hover{color:#fff}
     <button class="active" onclick="adminTab('dashboard')">Dashboard</button>
     <button onclick="adminTab('products')">Products</button>
     <button onclick="adminTab('orders')">Orders</button>
+    <button onclick="adminTab('users')">Users</button>
     <button onclick="adminTab('add-product')">Add Product</button>
   </div>
 
@@ -662,6 +774,14 @@ footer ul li a:hover{color:#fff}
     <div class="admin-card">
       <h3><i class="fas fa-shopping-bag" style="color:var(--primary)"></i> All Orders</h3>
       <div id="admin-orders-list"></div>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div class="admin-section" id="tab-users">
+    <div class="admin-card">
+      <h3><i class="fas fa-users" style="color:var(--primary)"></i> Registered Users</h3>
+      <div id="admin-users-list"></div>
     </div>
   </div>
 
@@ -713,7 +833,7 @@ footer ul li a:hover{color:#fff}
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getFirestore,collection,addDoc,getDocs,doc,updateDoc,deleteDoc,onSnapshot,query,orderBy,where,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,onAuthStateChanged,sendPasswordResetEmail,updateProfile,updateEmail}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyAusH_i0b-O2WM9PyZW_AvFtd2ZW7iSnE0",
@@ -778,17 +898,7 @@ onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),(snap)=>{
   orders=snap.docs.map(d=>({id:d.id,...d.data()}));
 });
 
-onAuthStateChanged(auth,(user)=>{
-  currentUser=user;
-  const btn=document.getElementById('auth-btn');
-  if(user){
-    btn.innerHTML='<i class="fas fa-user-shield"></i>';
-    closeAuth();
-    nav('admin');
-  } else {
-    btn.innerHTML='<i class="fas fa-user"></i>';
-  }
-});
+// Auth state handled by user account system below
 
 // ======= NAVIGATION =======
 function nav(view,param){
@@ -1679,6 +1789,474 @@ function showToast(msg,dur=2500){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
 }
+
+
+// ======= USER ACCOUNT SYSTEM =======
+let currentShopUser = null; // separate from admin currentUser
+let userWishlist = [];
+let ADMIN_EMAIL = null; // will be set after admin auth to distinguish
+
+// ---- Expose new globals ----
+window.showUserAuth = showUserAuth;
+window.closeUserAuth = closeUserAuth;
+window.showUAPane = showUAPane;
+window.userDoLogin = userDoLogin;
+window.userDoRegister = userDoRegister;
+window.userDoForgot = userDoForgot;
+window.openAccountPanel = openAccountPanel;
+window.closeAccountPanel = closeAccountPanel;
+window.switchAccountTab = switchAccountTab;
+window.saveUserProfile = saveUserProfile;
+window.userSignOut = userSignOut;
+window.toggleWishlist = toggleWishlist;
+window.removeFromWishlist = removeFromWishlist;
+window.renderAdminUsers = renderAdminUsers;
+
+// ---- Track the admin Firebase user UID so we don't mix up ----
+// onAuthStateChanged already sets currentUser for admin
+// We add a SEPARATE second auth listener for shop users
+// Actually we reuse the same auth instance — distinguish by Firestore 'users' doc
+
+// When Firebase auth state changes, figure out if it's a shop user or admin
+// We extend the existing onAuthStateChanged
+
+// Override: re-listen with extended logic
+onAuthStateChanged(auth, async (firebaseUser) => {
+  if (!firebaseUser) {
+    currentShopUser = null;
+    currentUser = null;
+    updateSidebarUserSection();
+    updateAuthHeaderBtn();
+    return;
+  }
+  // Check if this user has a 'users' document (shop user)
+  try {
+    const userDoc = await getDocs(query(collection(db,'users'), where('uid','==',firebaseUser.uid)));
+    if (!userDoc.empty) {
+      // Shop user
+      const data = userDoc.docs[0].data();
+      currentShopUser = { uid: firebaseUser.uid, docId: userDoc.docs[0].id, ...data };
+      currentUser = null; // not admin
+      closeUserAuth();
+      loadUserWishlist();
+      updateSidebarUserSection();
+      updateAuthHeaderBtn();
+    } else {
+      // Admin (no users doc)
+      currentUser = firebaseUser;
+      currentShopUser = null;
+      const btn = document.getElementById('auth-btn');
+      if(btn) btn.innerHTML='<i class="fas fa-user-shield"></i>';
+      closeAuth();
+      nav('admin');
+    }
+  } catch(e) {
+    // Fallback: treat as admin if no users collection access
+    currentUser = firebaseUser;
+    updateAuthHeaderBtn();
+  }
+});
+
+function updateAuthHeaderBtn(){
+  const btn = document.getElementById('auth-btn');
+  if(!btn) return;
+  if(currentShopUser){
+    btn.innerHTML='<i class="fas fa-user-check"></i>';
+    btn.title='My Account';
+  } else if(currentUser){
+    btn.innerHTML='<i class="fas fa-user-shield"></i>';
+    btn.title='Admin';
+  } else {
+    btn.innerHTML='<i class="fas fa-user"></i>';
+    btn.title='Sign In';
+  }
+}
+
+// Override auth-btn click to open user account or user login
+document.getElementById('auth-btn').onclick = function(){
+  if(currentShopUser){ openAccountPanel(); return; }
+  if(currentUser){ nav('admin'); return; }
+  showUserAuth('login');
+};
+
+// ---- SIDEBAR USER SECTION ----
+function updateSidebarUserSection(){
+  const el = document.getElementById('sidebar-user-section');
+  if(!el) return;
+  if(currentShopUser){
+    const initials = (currentShopUser.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    el.innerHTML = `<div class="sidebar-user">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="width:38px;height:38px;border-radius:50%;background:var(--primary);color:#fff;font-weight:900;font-family:'Nunito',sans-serif;display:flex;align-items:center;justify-content:center;font-size:15px">${initials}</div>
+        <div>
+          <div class="user-name">${currentShopUser.name||'User'}</div>
+          <div class="user-email">${currentShopUser.email||''}</div>
+        </div>
+      </div>
+      <div class="sidebar-user-actions">
+        <button class="sidebar-user-btn" style="background:var(--primary);color:#fff" onclick="openAccountPanel();closeSidebar()"><i class="fas fa-user-circle"></i> My Account</button>
+        <button class="sidebar-user-btn" style="background:var(--bg);color:var(--text);border:1px solid var(--border)" onclick="userSignOut()"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+      </div>
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="sidebar-user">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Sign in to access your account, orders & wishlist</div>
+      <div class="sidebar-user-actions">
+        <button class="sidebar-user-btn" style="background:var(--primary);color:#fff" onclick="showUserAuth('login');closeSidebar()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+        <button class="sidebar-user-btn" style="background:#fff;color:var(--primary);border:1.5px solid var(--primary)" onclick="showUserAuth('signup');closeSidebar()"><i class="fas fa-user-plus"></i> Sign Up</button>
+      </div>
+    </div>`;
+  }
+}
+updateSidebarUserSection();
+
+// ---- USER AUTH ----
+function showUserAuth(pane='login'){
+  document.getElementById('user-auth-overlay').classList.add('open');
+  showUAPane(pane);
+}
+function closeUserAuth(){
+  document.getElementById('user-auth-overlay').classList.remove('open');
+}
+function showUAPane(pane){
+  ['login','signup','forgot'].forEach(p=>{
+    document.getElementById('ua-'+p+'-pane').style.display = p===pane ? '' : 'none';
+  });
+  // clear errors
+  ['ua-login-err','ua-reg-err','ua-forgot-err'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.style.display='none';el.textContent='';}
+  });
+}
+
+async function userDoLogin(){
+  const email = document.getElementById('ua-login-email').value.trim();
+  const pass = document.getElementById('ua-login-pass').value;
+  const errEl = document.getElementById('ua-login-err');
+  errEl.style.display='none';
+  if(!email||!pass){errEl.textContent='Please fill all fields';errEl.style.display='block';return;}
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+    // onAuthStateChanged will handle the rest
+  }catch(e){
+    errEl.textContent = e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found' ? 'Invalid email or password' : 'Sign in failed. Try again.';
+    errEl.style.display='block';
+  }
+}
+
+async function userDoRegister(){
+  const name = document.getElementById('ua-reg-name').value.trim();
+  const email = document.getElementById('ua-reg-email').value.trim();
+  const phone = document.getElementById('ua-reg-phone').value.trim();
+  const pass = document.getElementById('ua-reg-pass').value;
+  const errEl = document.getElementById('ua-reg-err');
+  errEl.style.display='none';
+  if(!name||!email||!phone||!pass){errEl.textContent='Please fill all fields';errEl.style.display='block';return;}
+  if(pass.length<6){errEl.textContent='Password must be at least 6 characters';errEl.style.display='block';return;}
+  try{
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(cred.user, {displayName: name});
+    // Save user profile to Firestore
+    await addDoc(collection(db,'users'),{
+      uid: cred.user.uid,
+      name, email, phone,
+      createdAt: serverTimestamp()
+    });
+    showToast('Account created! Welcome, '+name+' 🎉');
+  }catch(e){
+    errEl.textContent = e.code==='auth/email-already-in-use' ? 'Email already registered. Sign in instead.' : 'Registration failed. Try again.';
+    errEl.style.display='block';
+  }
+}
+
+async function userDoForgot(){
+  const email = document.getElementById('ua-forgot-email').value.trim();
+  const errEl = document.getElementById('ua-forgot-err');
+  errEl.style.display='none';
+  if(!email){errEl.textContent='Enter your email';errEl.style.display='block';return;}
+  try{
+    await sendPasswordResetEmail(auth, email);
+    errEl.style.display='block';
+    errEl.style.color='#16a34a';
+    errEl.textContent='Reset link sent! Check your email.';
+  }catch(e){
+    errEl.textContent='Could not send reset email. Check the address.';
+    errEl.style.display='block';
+  }
+}
+
+async function userSignOut(){
+  await signOut(auth);
+  currentShopUser = null;
+  userWishlist = [];
+  updateSidebarUserSection();
+  updateAuthHeaderBtn();
+  closeAccountPanel();
+  showToast('Signed out successfully');
+}
+
+// ---- MY ACCOUNT PANEL ----
+function openAccountPanel(){
+  if(!currentShopUser){showUserAuth('login');return;}
+  // Populate profile fields
+  document.getElementById('acct-name').value = currentShopUser.name||'';
+  document.getElementById('acct-email').value = currentShopUser.email||'';
+  document.getElementById('acct-phone').value = currentShopUser.phone||'';
+  const initials = (currentShopUser.name||'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('acct-avatar').textContent = initials;
+  document.getElementById('account-panel').classList.add('open');
+  switchAccountTab('profile');
+}
+function closeAccountPanel(){
+  document.getElementById('account-panel').classList.remove('open');
+}
+function switchAccountTab(tab){
+  document.querySelectorAll('.account-tab').forEach((btn,i)=>{
+    const tabs=['profile','orders','wishlist'];
+    btn.classList.toggle('active', tabs[i]===tab);
+  });
+  document.querySelectorAll('.account-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('acct-'+tab).classList.add('active');
+  if(tab==='orders') renderAccountOrders();
+  if(tab==='wishlist') renderAccountWishlist();
+}
+
+async function saveUserProfile(){
+  const name = document.getElementById('acct-name').value.trim();
+  const phone = document.getElementById('acct-phone').value.trim();
+  const errEl = document.getElementById('acct-save-err');
+  errEl.style.display='none';
+  if(!name){errEl.textContent='Name is required';errEl.style.display='block';return;}
+  try{
+    await updateDoc(doc(db,'users',currentShopUser.docId),{name,phone});
+    currentShopUser.name=name; currentShopUser.phone=phone;
+    const initials = name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('acct-avatar').textContent=initials;
+    updateSidebarUserSection();
+    showToast('Profile updated ✓');
+  }catch(e){errEl.textContent='Failed to save. Try again.';errEl.style.display='block';}
+}
+
+// ---- ACCOUNT ORDERS ----
+function renderAccountOrders(){
+  const el = document.getElementById('acct-orders-list');
+  if(!currentShopUser){el.innerHTML='<div class="empty"><i class="fas fa-box-open"></i><h3>Sign in to view orders</h3></div>';return;}
+  const uid = currentShopUser.uid;
+  const phone = currentShopUser.phone||'';
+  const email = currentShopUser.email||'';
+  // Match by userId, phone, or email
+  const userOrders = orders.filter(o=>
+    o.userId===uid ||
+    (phone && (o.phone===phone||o.phone===phone.replace('+234','0')||o.phone===phone.replace('+',''))) ||
+    (email && o.email===email)
+  );
+  if(!userOrders.length){
+    el.innerHTML='<div class="empty"><i class="fas fa-shopping-bag"></i><h3>No orders yet</h3><p>Your order history will appear here</p></div>';
+    return;
+  }
+  const statusLabels={pending:'Pending',confirmed:'Confirmed',processing:'Processing',out:'Out for Delivery',delivered:'Delivered'};
+  el.innerHTML = userOrders.map(o=>`
+    <div class="order-hist-item">
+      <strong>#${o.orderId} <span class="status-badge status-${o.status||'pending'}" style="float:right">${statusLabels[o.status||'pending']}</span></strong>
+      <div style="color:var(--muted);margin-bottom:4px">${o.items?.map(i=>''+i.name+' ×'+i.qty).join(', ')||''}</div>
+      <div style="font-weight:800;color:var(--primary);font-family:'Nunito',sans-serif">₦${Number(o.total).toLocaleString()}</div>
+      <button class="btn-outline" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="closeAccountPanel();nav('tracking');document.getElementById('track-input').value='${o.orderId}';doTrack()"><i class="fas fa-map-marker-alt"></i> Track</button>
+    </div>`).join('');
+}
+
+// ---- WISHLIST ----
+async function loadUserWishlist(){
+  if(!currentShopUser) return;
+  try{
+    const snap = await getDocs(query(collection(db,'wishlists'), where('userId','==',currentShopUser.uid)));
+    userWishlist = snap.docs.map(d=>({wid:d.id,...d.data()}));
+    updateWishlistBtn();
+  }catch(e){userWishlist=[];}
+}
+
+function isWishlisted(productId){
+  return userWishlist.some(w=>w.productId===productId);
+}
+
+function updateWishlistBtn(){
+  if(!currentProduct) return;
+  const btn = document.getElementById('pd-wishlist-btn');
+  const label = document.getElementById('pd-wishlist-label');
+  if(!btn) return;
+  const wishlisted = isWishlisted(currentProduct.id);
+  btn.classList.toggle('wishlisted', wishlisted);
+  if(label) label.textContent = wishlisted ? 'Saved to Wishlist ♥' : 'Save to Wishlist';
+}
+
+async function toggleWishlist(){
+  if(!currentShopUser){showUserAuth('login');showToast('Please sign in to save items');return;}
+  if(!currentProduct) return;
+  const existing = userWishlist.find(w=>w.productId===currentProduct.id);
+  if(existing){
+    // Remove
+    try{
+      await deleteDoc(doc(db,'wishlists',existing.wid));
+      userWishlist = userWishlist.filter(w=>w.wid!==existing.wid);
+      showToast('Removed from wishlist');
+      updateWishlistBtn();
+    }catch(e){showToast('Error updating wishlist');}
+  } else {
+    // Add
+    try{
+      const p = currentProduct;
+      const data = {
+        userId: currentShopUser.uid,
+        productId: p.id,
+        name: p.name,
+        price: Number(p.discPrice||p.price),
+        image: p.images?.[0]||'',
+        addedAt: serverTimestamp()
+      };
+      const ref = await addDoc(collection(db,'wishlists'), data);
+      userWishlist.push({wid:ref.id,...data});
+      showToast('Saved to wishlist ♥');
+      updateWishlistBtn();
+    }catch(e){showToast('Error saving to wishlist');}
+  }
+}
+
+async function removeFromWishlist(wid){
+  try{
+    await deleteDoc(doc(db,'wishlists',wid));
+    userWishlist = userWishlist.filter(w=>w.wid!==wid);
+    renderAccountWishlist();
+    showToast('Removed from wishlist');
+  }catch(e){showToast('Error removing item');}
+}
+
+function renderAccountWishlist(){
+  const el = document.getElementById('acct-wishlist-list');
+  if(!currentShopUser){el.innerHTML='<div class="empty"><i class="fas fa-heart"></i><h3>Sign in to view wishlist</h3></div>';return;}
+  if(!userWishlist.length){
+    el.innerHTML='<div class="empty"><i class="fas fa-heart"></i><h3>Your wishlist is empty</h3><p>Tap "Save to Wishlist" on any product</p></div>';
+    return;
+  }
+  el.innerHTML = userWishlist.map(w=>`
+    <div class="wishlist-item">
+      <img src="${w.image}" onerror="this.src=''" alt="${w.name}"/>
+      <div class="wishlist-item-body">
+        <div class="wishlist-item-name">${w.name}</div>
+        <div class="wishlist-item-price">₦${Number(w.price).toLocaleString()}</div>
+        <button class="btn-cart" style="margin-top:4px;font-size:11px;padding:4px 8px" onclick="closeAccountPanel();openProduct('${w.productId}')"><i class="fas fa-eye"></i> View</button>
+      </div>
+      <button class="wishlist-remove" onclick="removeFromWishlist('${w.wid}')" title="Remove"><i class="fas fa-times-circle"></i></button>
+    </div>`).join('');
+}
+
+// ---- ADMIN: VIEW ALL USERS ----
+async function renderAdminUsers(){
+  const el = document.getElementById('admin-users-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    const snap = await getDocs(query(collection(db,'users'),orderBy('createdAt','desc')));
+    const users = snap.docs.map(d=>({uid:d.id,...d.data()}));
+    if(!users.length){el.innerHTML='<div class="empty"><i class="fas fa-users"></i><h3>No registered users</h3></div>';return;}
+    el.innerHTML = users.map(u=>{
+      const userOrders = orders.filter(o=>o.userId===u.uid||(u.phone&&o.phone===u.phone)||(u.email&&o.email===u.email));
+      return `<div class="order-row">
+        <strong style="font-size:13px">${u.name||'Unknown'}</strong>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${u.email||''} | ${u.phone||''}</div>
+        <div style="font-size:11px;margin-bottom:4px"><b>${userOrders.length}</b> order(s) | Joined: ${u.createdAt?.toDate?.()?.toLocaleDateString()||'—'}</div>
+        ${userOrders.length ? '<div style="font-size:11px;color:var(--muted)">Orders: '+userOrders.map(o=>'#'+o.orderId).join(', ')+'</div>' : ''}
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<div class="empty"><h3>Error loading users</h3></div>';}
+}
+
+// ---- PATCH placeOrder to link orders to user ----
+const _origPlaceOrder = placeOrder;
+window.placeOrder = async function(){
+  // Inject userId into order before placing
+  const origAddDoc = window._addDocOrig || addDoc;
+  // We patch by adding userId to the order data right before saving
+  // This is done inline in the patched placeOrder below
+  await patchedPlaceOrder();
+};
+
+async function patchedPlaceOrder(){
+  const name=document.getElementById('co-name').value.trim();
+  const phone=document.getElementById('co-phone').value.trim();
+  const email=document.getElementById('co-email').value.trim();
+  const address=document.getElementById('co-address').value.trim();
+  const payment=document.querySelector('input[name=payment]:checked')?.value||'bank';
+  if(!name||!phone||!address){showToast('Please fill required fields');return;}
+  if(!cart.length){showToast('Cart is empty');return;}
+  const total=cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const orderId='BNM'+Date.now().toString().slice(-8);
+  const orderData={
+    orderId,name,phone,email,address,payment,
+    items:cart.map(c=>({...c})),
+    total,status:'pending',
+    createdAt:serverTimestamp()
+  };
+  // Link to user account if logged in
+  if(currentShopUser){
+    orderData.userId = currentShopUser.uid;
+    // Pre-fill checkout fields if empty
+  }
+  try{
+    await addDoc(collection(db,'orders'),orderData);
+    const waText=encodeURIComponent('🛍 NEW ORDER from BENIM Trade!\n\nOrder ID: '+orderId+'\nCustomer: '+name+'\nPhone: '+phone+'\nAddress: '+address+'\nPayment: '+(payment==='bank'?'Bank Transfer':'Pay on Delivery')+'\n\nItems:\n'+cart.map(c=>'• '+c.name+' ×'+c.qty+' = ₦'+(c.price*c.qty).toLocaleString()).join('\n')+'\n\nTotal: ₦'+total.toLocaleString());
+    window.open('https://wa.me/2349168031213?text='+waText,'_blank');
+    showReceipt({orderId,name,phone,address,payment,items:[...cart],total});
+    cart=[];saveCart();
+  }catch(err){
+    showToast('Error placing order. Try again.');
+    console.error(err);
+  }
+}
+
+// Pre-fill checkout from user profile
+const _origRenderCheckout = renderCheckout;
+function renderCheckout(){
+  _origRenderCheckout();
+  if(currentShopUser){
+    if(!document.getElementById('co-name').value && currentShopUser.name)
+      document.getElementById('co-name').value = currentShopUser.name;
+    if(!document.getElementById('co-phone').value && currentShopUser.phone)
+      document.getElementById('co-phone').value = currentShopUser.phone;
+    if(!document.getElementById('co-email').value && currentShopUser.email)
+      document.getElementById('co-email').value = currentShopUser.email;
+  }
+}
+window.renderCheckout = renderCheckout;
+
+// Update openProduct to refresh wishlist button state
+const _origOpenProduct = openProduct;
+window.openProduct = function(id){
+  _origOpenProduct(id);
+  setTimeout(updateWishlistBtn, 50);
+};
+
+// Patch adminTab to handle users
+const _origAdminTab = adminTab;
+window.adminTab = function(tab){
+  _origAdminTab(tab);
+  if(tab==='users') renderAdminUsers();
+};
+
+// Update admin dashboard stats to include users count
+const _origRenderAdminDashboard = renderAdminDashboard;
+window.renderAdminDashboard = function(){
+  _origRenderAdminDashboard();
+  // Add users stat
+  getDocs(collection(db,'users')).then(snap=>{
+    const stats = document.getElementById('admin-stats');
+    if(stats && !document.getElementById('users-stat')){
+      const div = document.createElement('div');
+      div.className='stat-card'; div.id='users-stat';
+      div.innerHTML='<div class="val">'+snap.size+'</div><div class="lbl">Users</div>';
+      stats.appendChild(div);
+    }
+  }).catch(()=>{});
+};
+
 
 // Init
 history.replaceState({view:'home'},'','#home');
