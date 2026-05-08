@@ -675,14 +675,15 @@ footer ul li a:hover{color:#fff}
           <li><a href="#" onclick="nav('cart');return false">Cart</a></li>
           <li><a href="#" onclick="showAboutUs();return false">About Us</a></li>
           <li><a href="#" onclick="showReturnPolicy();return false">Return Policy</a></li>
+          <li><a href="#" onclick="showDeliveryPolicy();return false">Delivery Policy</a></li>
         </ul>
       </div>
       <div>
         <h4>Contact</h4>
         <ul>
           <li><a href="https://wa.me/2349168031213">WhatsApp: +234 916 803 1213</a></li>
-          <li><a href="#">Delivery Policy</a></li>
-          <li><a href="#">Returns Policy</a></li>
+          <li><a href="#" onclick="showDeliveryPolicy();return false">Delivery Policy</a></li>
+          <li><a href="#" onclick="showReturnPolicy();return false">Returns Policy</a></li>
         </ul>
       </div>
     </div>
@@ -1179,6 +1180,62 @@ footer ul li a:hover{color:#fff}
     <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px;margin-top:4px;font-size:13px">
       <strong><i class="fas fa-headset" style="color:#16a34a"></i> Need help?</strong><br/>
       Contact our support team:<br/>
+      <a href="https://wa.me/2349168031213" style="color:#16a34a;font-weight:700">WhatsApp: +234 916 803 1213</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DELIVERY POLICY VIEW ===== -->
+<div class="info-view" id="view-delivery">
+  <div class="info-head">
+    <button onclick="goBackFromInfo()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer"><i class="fas fa-arrow-left"></i></button>
+    <h2>Delivery Policy</h2>
+  </div>
+  <div class="info-body">
+    <div style="background:#fff7ed;border-left:4px solid var(--primary);border-radius:8px;padding:14px;margin-bottom:18px">
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px"><i class="fas fa-truck" style="color:var(--primary)"></i> Fast &amp; Reliable Delivery</div>
+      <p style="margin:0;font-size:13px;color:var(--muted)">We deliver across Nigeria within 1–5 business days.</p>
+    </div>
+    <div class="info-card">
+      <h3>Delivery Areas</h3>
+      <ul>
+        <li>Lagos – 1–2 business days</li>
+        <li>Abuja &amp; Port Harcourt – 2–3 business days</li>
+        <li>Other major cities – 3–5 business days</li>
+        <li>Remote areas – 5–7 business days</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Delivery Fees</h3>
+      <ul>
+        <li>Lagos: ₦1,500 – ₦2,500</li>
+        <li>Abuja / Port Harcourt: ₦2,500 – ₦3,500</li>
+        <li>Other states: ₦3,000 – ₦5,000</li>
+        <li>Free delivery on orders above ₦50,000</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>How It Works</h3>
+      <ul>
+        <li>Place your order and complete payment</li>
+        <li>You receive an order confirmation on WhatsApp</li>
+        <li>Your item is packed and dispatched within 24 hours</li>
+        <li>You receive tracking updates via WhatsApp</li>
+        <li>Delivery agent contacts you before arrival</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Important Notes</h3>
+      <ul>
+        <li>Ensure your delivery address and phone number are correct at checkout</li>
+        <li>Someone must be available to receive the package</li>
+        <li>BENIM is not responsible for delays caused by incorrect addresses</li>
+        <li>Delivery times may vary during public holidays</li>
+      </ul>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px;margin-top:4px;font-size:13px">
+      <strong><i class="fas fa-headset" style="color:#16a34a"></i> Delivery issues?</strong><br/>
+      Contact us immediately:<br/>
       <a href="https://wa.me/2349168031213" style="color:#16a34a;font-weight:700">WhatsApp: +234 916 803 1213</a>
     </div>
   </div>
@@ -3235,19 +3292,33 @@ window.renderAdminReviews=renderAdminReviews;
 // ---- Modal helpers ----
 // ─── Full-page info view navigation ───
 let _infoReturnView='home';
+const _mainViews=['home','search','product','cart','checkout','receipt','tracking','orders','admin'];
+
+function _hideMainViews(){
+  _mainViews.forEach(v=>{
+    const el=document.getElementById('view-'+v);
+    if(el) el.style.display='none';
+  });
+}
 function showAboutUs(){
   _infoReturnView=_currentView||'home';
-  // hide all main views
-  document.querySelectorAll('[id^="view-"]').forEach(v=>v.style.display='none');
+  _hideMainViews();
   document.querySelectorAll('.info-view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-about').classList.add('active');
   window.scrollTo(0,0);
 }
 function showReturnPolicy(){
   _infoReturnView=_currentView||'home';
-  document.querySelectorAll('[id^="view-"]').forEach(v=>v.style.display='none');
+  _hideMainViews();
   document.querySelectorAll('.info-view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-return').classList.add('active');
+  window.scrollTo(0,0);
+}
+function showDeliveryPolicy(){
+  _infoReturnView=_currentView||'home';
+  _hideMainViews();
+  document.querySelectorAll('.info-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-delivery').classList.add('active');
   window.scrollTo(0,0);
 }
 function goBackFromInfo(){
@@ -3257,6 +3328,7 @@ function goBackFromInfo(){
 function closeModal(id){}
 window.showAboutUs=showAboutUs;
 window.showReturnPolicy=showReturnPolicy;
+window.showDeliveryPolicy=showDeliveryPolicy;
 window.goBackFromInfo=goBackFromInfo;
 window.closeModal=closeModal;
 
