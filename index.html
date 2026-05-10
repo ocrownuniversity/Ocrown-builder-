@@ -31,24 +31,26 @@ input,select,textarea{font-family:inherit;outline:none}
 ul{list-style:none}
 
 /* ============ HEADER ============ */
-.header{position:sticky;top:0;z-index:1000;background:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.header-top{display:flex;align-items:center;gap:10px;padding:8px 14px;min-height:var(--header-h)}
-.logo{font-family:'Nunito',sans-serif;font-weight:900;font-size:22px;color:#fff;white-space:nowrap;letter-spacing:-1px}
-.logo span{color:var(--accent)}
-.search-bar{flex:1;display:flex;border-radius:6px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.search-bar input{flex:1;border:none;padding:9px 12px;font-size:14px;background:transparent}
-.search-bar select{border:none;border-left:1px solid var(--border);padding:0 8px;font-size:13px;background:#fff;color:var(--muted)}
-.search-bar button{background:var(--primary-dark);color:#fff;padding:0 14px;font-size:16px;transition:.2s}
+.header{position:sticky;top:0;z-index:1000;background:var(--primary);box-shadow:0 3px 12px rgba(0,0,0,.2)}
+.header-top{display:flex;align-items:center;gap:12px;padding:8px 16px;min-height:62px}
+.logo{display:flex;align-items:center;cursor:pointer;flex-shrink:0;text-decoration:none}
+.logo-img{height:46px;width:46px;object-fit:cover;border-radius:8px;border:2px solid rgba(255,255,255,.35);box-shadow:0 2px 10px rgba(0,0,0,.25);background:rgba(255,255,255,.1);transition:.2s}
+.logo-img:hover{border-color:rgba(255,255,255,.7);transform:scale(1.05)}
+.search-bar{flex:1;display:flex;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15);min-width:0}
+.search-bar input{flex:1;border:none;padding:10px 14px;font-size:14px;background:transparent;min-width:0}
+.search-bar select{border:none;border-left:1px solid var(--border);padding:0 8px;font-size:12px;background:#fff;color:var(--muted);display:none}
+@media(min-width:500px){.search-bar select{display:block}}
+.search-bar button{background:var(--primary-dark);color:#fff;padding:0 16px;font-size:16px;transition:.2s;flex-shrink:0}
 .search-bar button:hover{background:var(--text)}
-.header-icons{display:flex;gap:4px}
-.hicon{background:rgba(255,255,255,.15);border:none;color:#fff;padding:8px 10px;border-radius:6px;font-size:15px;position:relative;transition:.2s;cursor:pointer}
-.hicon:hover{background:rgba(255,255,255,.3)}
-.badge{position:absolute;top:-4px;right:-4px;background:var(--accent);color:var(--text);font-size:10px;font-weight:700;border-radius:50%;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center}
-.header-sub{background:var(--primary-dark);padding:0 14px;display:flex;align-items:center;gap:0}
-.menu-btn{background:none;border:none;color:#fff;font-size:13px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600}
+.header-icons{display:flex;gap:6px;flex-shrink:0}
+.hicon{background:rgba(255,255,255,.18);border:none;color:#fff;padding:9px 11px;border-radius:8px;font-size:16px;position:relative;transition:.2s;cursor:pointer}
+.hicon:hover{background:rgba(255,255,255,.35)}
+.badge{position:absolute;top:-5px;right:-5px;background:var(--accent);color:var(--text);font-size:10px;font-weight:800;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;border:2px solid var(--primary)}
+.header-sub{background:var(--primary-dark);padding:0 16px;display:flex;align-items:center;gap:0}
+.menu-btn{background:none;border:none;color:#fff;font-size:13px;padding:7px 12px 7px 0;cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:600}
 .nav-links{display:flex;gap:2px}
-.nav-links a{color:rgba(255,255,255,.9);font-size:12px;padding:6px 10px;border-radius:4px;transition:.2s;font-weight:500}
-.nav-links a:hover{background:rgba(255,255,255,.15);color:#fff}
+.nav-links a{color:rgba(255,255,255,.9);font-size:12px;padding:7px 10px;border-radius:4px;transition:.2s;font-weight:500}
+.nav-links a:hover{background:rgba(255,255,255,.18);color:#fff}
 
 /* ============ SIDEBAR / HAMBURGER ============ */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;display:none;opacity:0;transition:opacity .25s}
@@ -123,7 +125,31 @@ ul{list-style:none}
 .cat-pill{background:#fff;border:2px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:5px}
 .cat-pill:hover,.cat-pill.active{background:var(--primary);border-color:var(--primary);color:#fff}
 
-/* ============ PRODUCT DETAIL ============ */
+/* ============ DELIVERY SECTION (Jumia-style) ============ */
+.delivery-section{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:14px}
+.delivery-section-title{font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.delivery-tabs{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1.5px solid var(--border);margin-bottom:12px}
+.delivery-tab{flex:1;padding:9px 6px;font-size:12px;font-weight:700;background:#fff;border:none;cursor:pointer;transition:.2s;color:var(--muted)}
+.delivery-tab.active{background:var(--primary);color:#fff}
+.delivery-tab-content{display:none}
+.delivery-tab-content.active{display:block}
+.delivery-option-row{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:8px;background:var(--bg);margin-bottom:8px}
+.delivery-option-icon{font-size:20px;margin-top:2px;flex-shrink:0}
+.delivery-option-body{}
+.delivery-option-title{font-size:13px;font-weight:700;margin-bottom:2px}
+.delivery-option-detail{font-size:11px;color:var(--muted);line-height:1.6}
+.delivery-fee-tag{display:inline-block;background:#d1fae5;color:#065f46;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px}
+.delivery-free-tag{display:inline-block;background:#fef3c7;color:#92400e;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px}
+.delivery-address-box{background:var(--bg);border-radius:8px;padding:10px;margin-top:4px}
+.delivery-address-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.delivery-location-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s}
+.delivery-location-item:last-child{border-bottom:none}
+.delivery-location-item:hover{color:var(--primary)}
+.delivery-location-item i{color:var(--primary);font-size:12px;width:14px}
+.delivery-location-item span{font-size:12px}
+.delivery-eta{display:flex;align-items:center;gap:6px;background:#eff6ff;border-radius:6px;padding:8px 10px;margin-top:8px}
+.delivery-eta i{color:#3b82f6}
+.delivery-eta span{font-size:12px;color:#1e40af;font-weight:600}
 #view-product{display:none}
 .product-detail{max-width:700px;margin:0 auto;padding:14px}
 .product-detail-imgs{position:relative;background:#f3f3f3;border-radius:var(--radius);overflow:hidden;margin-bottom:14px}
@@ -794,6 +820,26 @@ footer ul li a:hover{color:#fff}
       <div class="delivery-info-row"><i class="fas fa-map-marker-alt"></i> <b>Abuja/PH:</b> ₦4,500–₦6,000 &nbsp;|&nbsp; <b>Others:</b> ₦3,000–₦6,000</div>
       <div class="delivery-info-row"><i class="fas fa-gift"></i> <b>Free delivery</b> on orders above ₦150,000</div>
       <div class="delivery-info-row"><i class="fas fa-shield-alt"></i> <b>100% Authentic</b> BENIM products only</div>
+    </div>
+
+    <!-- DELIVERY SECTION -->
+    <div class="delivery-section">
+      <div class="delivery-section-title"><i class="fas fa-truck" style="color:var(--primary)"></i> Delivery Options</div>
+      <div class="delivery-tabs">
+        <button class="delivery-tab active" onclick="switchDeliveryTab(this,'pickup')"><i class="fas fa-store"></i> Pickup Station</button>
+        <button class="delivery-tab" onclick="switchDeliveryTab(this,'home')"><i class="fas fa-home"></i> Home Delivery</button>
+      </div>
+      <div class="delivery-tab-content active" id="delivery-pickup">
+        <div class="delivery-option-row"><div class="delivery-option-icon"><i class="fas fa-map-marker-alt"></i></div><div class="delivery-option-body"><div class="delivery-option-title">Nearest Pickup Station</div><div class="delivery-option-detail">BENIM Pickup – Ibadan (Dugbe, Challenge, UI)</div></div><span class="delivery-free-tag">FREE</span></div>
+        <div class="delivery-eta"><i class="fas fa-clock"></i> Ready in 1–2 business days after payment</div>
+        <div class="delivery-address-box"><div class="delivery-address-title"><i class="fas fa-search-location"></i> Popular Locations</div><div class="delivery-location-item">📍 Dugbe Market, Ibadan</div><div class="delivery-location-item">📍 Challenge, Ibadan</div><div class="delivery-location-item">📍 University of Ibadan Gate</div></div>
+      </div>
+      <div class="delivery-tab-content" id="delivery-home">
+        <div class="delivery-option-row"><div class="delivery-option-icon"><i class="fas fa-truck"></i></div><div class="delivery-option-body"><div class="delivery-option-title">Ibadan Delivery</div><div class="delivery-option-detail">Door delivery within Ibadan metropolis</div></div><span class="delivery-fee-tag">₦1,500–₦2,500</span></div>
+        <div class="delivery-option-row"><div class="delivery-option-icon"><i class="fas fa-truck"></i></div><div class="delivery-option-body"><div class="delivery-option-title">Lagos / Abuja / PH</div><div class="delivery-option-detail">Nationwide courier delivery</div></div><span class="delivery-fee-tag">₦2,500–₦6,000</span></div>
+        <div class="delivery-eta"><i class="fas fa-clock"></i> Arrives in 1–4 business days after dispatch</div>
+        <div class="delivery-option-row" style="margin-top:8px"><div class="delivery-option-icon" style="color:#16a34a"><i class="fas fa-gift"></i></div><div class="delivery-option-body"><div class="delivery-option-title" style="color:#16a34a">Free Delivery</div><div class="delivery-option-detail">On orders above ₦150,000</div></div><span class="delivery-free-tag">FREE</span></div>
+      </div>
     </div>
 
     <!-- REVIEW SECTION -->
@@ -3573,6 +3619,14 @@ window.nav = window.nav; // already set above
 
 // Init
 history.replaceState({view:'home'},'','#home');
+
+function switchDeliveryTab(btn, type) {
+  document.querySelectorAll('.delivery-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.delivery-tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  const el = document.getElementById('delivery-' + type);
+  if (el) el.classList.add('active');
+}
 </script>
 </body>
 </html>
