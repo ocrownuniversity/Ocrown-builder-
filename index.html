@@ -497,6 +497,35 @@ footer ul li a:hover{color:#fff}
 .guarantee-row-detail{font-size:11px;color:var(--muted);line-height:1.6}
 .guarantee-cost-free{display:inline-block;background:#d1fae5;color:#065f46;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px}
 </style>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#f97316"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="BENIM Trade"/>
+<link rel="apple-touch-icon" href="https://via.placeholder.com/192x192/f97316/ffffff?text=BT"/>
+<style>
+/* ===== PWA INSTALL BANNER ===== */
+#pwa-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#fff;border-top:3px solid #f97316;box-shadow:0 -4px 20px rgba(0,0,0,.15);padding:14px 16px;animation:slideUp .4s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+#pwa-banner.show{display:flex;align-items:center;gap:12px}
+.pwa-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pwa-icon i{color:#fff;font-size:22px}
+.pwa-text{flex:1;min-width:0}
+.pwa-text strong{display:block;font-size:14px;font-weight:700;color:#1a1a2e}
+.pwa-text span{font-size:12px;color:#6b7280}
+.pwa-actions{display:flex;gap:8px;flex-shrink:0}
+.pwa-install-btn{background:#f97316;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.pwa-install-btn:hover{background:#ea580c}
+.pwa-dismiss-btn{background:none;border:1px solid #e5e7eb;border-radius:8px;padding:9px 12px;font-size:13px;color:#6b7280;cursor:pointer;font-family:inherit}
+.pwa-dismiss-btn:hover{background:#f8f8f8}
+
+/* iOS install tip */
+#ios-tip{display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 16px;text-align:center;font-size:13px;box-shadow:0 -4px 20px rgba(0,0,0,.3);animation:slideUp .4s ease}
+#ios-tip.show{display:block}
+#ios-tip strong{color:#fbbf24}
+#ios-tip .ios-close{float:right;background:none;border:none;color:#fff;font-size:18px;cursor:pointer;margin-top:-2px}
+</style>
 </head>
 <body>
 
@@ -3697,6 +3726,84 @@ function switchDeliveryTab(btn, type) {
   const el = document.getElementById('delivery-' + type);
   if (el) el.classList.add('active');
 }
+</script>
+
+<!-- PWA Install Banner (Android/Desktop) -->
+<div id="pwa-banner">
+  <div class="pwa-icon"><i class="fas fa-store"></i></div>
+  <div class="pwa-text">
+    <strong>Install BENIM Trade</strong>
+    <span>Shop faster — add to your home screen</span>
+  </div>
+  <div class="pwa-actions">
+    <button class="pwa-install-btn" id="pwa-install-btn">Install</button>
+    <button class="pwa-dismiss-btn" id="pwa-dismiss-btn">✕</button>
+  </div>
+</div>
+
+<!-- iOS Install Tip -->
+<div id="ios-tip">
+  <button class="ios-close" id="ios-tip-close">✕</button>
+  To install: tap <strong>Share</strong> <strong>⬆</strong> then <strong>"Add to Home Screen"</strong>
+</div>
+
+<script>
+// ===== PWA SERVICE WORKER =====
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// ===== INSTALL PROMPT =====
+let deferredPrompt = null;
+const banner = document.getElementById('pwa-banner');
+const installBtn = document.getElementById('pwa-install-btn');
+const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+// Don't show if already dismissed
+const dismissed = localStorage.getItem('pwa-dismissed');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if(!dismissed){
+    setTimeout(()=>banner.classList.add('show'), 2000);
+  }
+});
+
+installBtn.addEventListener('click', async () => {
+  if(!deferredPrompt) return;
+  banner.classList.remove('show');
+  deferredPrompt.prompt();
+  const {outcome} = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+});
+
+dismissBtn.addEventListener('click', () => {
+  banner.classList.remove('show');
+  localStorage.setItem('pwa-dismissed','1');
+});
+
+// iOS detection
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isInStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+const iosTip = document.getElementById('ios-tip');
+const iosTipClose = document.getElementById('ios-tip-close');
+
+if(isIOS && !isInStandalone && !dismissed){
+  setTimeout(()=>iosTip.classList.add('show'), 2500);
+}
+iosTipClose.addEventListener('click',()=>{
+  iosTip.classList.remove('show');
+  localStorage.setItem('pwa-dismissed','1');
+});
+
+// Hide banner when installed
+window.addEventListener('appinstalled',()=>{
+  banner.classList.remove('show');
+  iosTip.classList.remove('show');
+});
 </script>
 </body>
 </html>

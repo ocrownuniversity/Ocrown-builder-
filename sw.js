@@ -1,84 +1,114 @@
-// BENIM Warehouse Service Worker v1.0
-var CACHE_NAME = "benim-warehouse-v1";
-var OFFLINE_URL = "/Benim_Trade/";
+// BENIM Trade Service Worker
+const CACHE_NAME = 'benim-trade-v1';
+const STATIC_CACHE = 'benim-static-v1';
 
-var urlsToCache = [
-  "/Benim_Trade/",
-  "/Benim_Trade/index.html",
-  "/Benim_Trade/manifest.json",
-  "/Benim_Trade/icon-192.png",
-  "/Benim_Trade/icon-512.png"
+// Core assets to cache on install
+const PRECACHE_URLS = [
+  './',
+  './index.html',
+  './manifest.json',
+  'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css'
 ];
 
-// Install - cache files
-self.addEventListener("install", function(event){
-  console.log("BENIM SW: Installing...");
+// ===== INSTALL =====
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache){
-      console.log("BENIM SW: Caching files");
-      return cache.addAll(urlsToCache);
-    })
-  );
-  self.skipWaiting();
-});
-
-// Activate - clean old caches
-self.addEventListener("activate", function(event){
-  console.log("BENIM SW: Activating...");
-  event.waitUntil(
-    caches.keys().then(function(cacheNames){
-      return Promise.all(
-        cacheNames.filter(function(name){
-          return name !== CACHE_NAME;
-        }).map(function(name){
-          console.log("BENIM SW: Deleting old cache", name);
-          return caches.delete(name);
-        })
+    caches.open(CACHE_NAME).then(cache => {
+      // Cache what we can, ignore failures (CDN etc)
+      return Promise.allSettled(
+        PRECACHE_URLS.map(url => cache.add(url).catch(() => {}))
       );
-    })
-  );
-  self.clients.claim();
-});
-
-// Fetch - serve from cache, fallback to network
-self.addEventListener("fetch", function(event){
-  event.respondWith(
-    caches.match(event.request).then(function(response){
-      if(response){
-        return response;
-      }
-      return fetch(event.request).then(function(networkResponse){
-        // Cache new requests dynamically
-        if(networkResponse && networkResponse.status === 200 && event.request.method === "GET"){
-          var responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then(function(cache){
-            cache.put(event.request, responseClone);
-          });
-        }
-        return networkResponse;
-      });
-    }).catch(function(){
-      // Offline fallback
-      return caches.match(OFFLINE_URL);
-    })
+    }).then(() => self.skipWaiting())
   );
 });
 
-// Push notifications (future use)
-self.addEventListener("push", function(event){
-  var options = {
-    body: event.data ? event.data.text() : "New update from BENIM Warehouse!",
-    icon: "/Benim_Trade/icon-192.png",
-    badge: "/Benim_Trade/icon-192.png",
-    vibrate: [100, 50, 100],
-    data: {url: "/Benim_Trade/"}
-  };
+// ===== ACTIVATE =====
+self.addEventListener('activate', event => {
   event.waitUntil(
-    self.registration.showNotification("BENIM Warehouse", options)
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME && key !== STATIC_CACHE)
+          .map(key => caches.delete(key))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("notificationclick", function(event){
+// ===== FETCH =====
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET and non-http requests
+  if (request.method !== 'GET') return;
+  if (!url.protocol.startsWith('http')) return;
+
+  // Skip Firebase, Paystack, EmailJS — always go network
+  if (
+    url.hostname.includes('firebase') ||
+    url.hostname.includes('firebaseio') ||
+    url.hostname.includes('googleapis.com') ||
+    url.hostname.includes('paystack') ||
+    url.hostname.includes('emailjs') ||
+    url.hostname.includes('api.')
+  ) {
+    return; // Let browser handle it normally
+  }
+
+  event.respondWith(
+    caches.match(request).then(cached => {
+      if (cached) return cached;
+
+      return fetch(request).then(response => {
+        // Only cache valid responses
+        if (!response || response.status !== 200 || response.type === 'opaque') {
+          return response;
+        }
+
+        // Cache fonts and CDN assets
+        if (
+          url.hostname.includes('fonts.googleapis') ||
+          url.hostname.includes('fonts.gstatic') ||
+          url.hostname.includes('cdnjs.cloudflare')
+        ) {
+          const cloned = response.clone();
+          caches.open(STATIC_CACHE).then(cache => cache.put(request, cloned));
+        }
+
+        // Cache the main index.html
+        if (url.pathname === '/' || url.pathname.endsWith('index.html')) {
+          const cloned = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, cloned));
+        }
+
+        return response;
+      }).catch(() => {
+        // Offline fallback for HTML pages
+        if (request.headers.get('accept')?.includes('text/html')) {
+          return caches.match('./index.html');
+        }
+      });
+    })
+  );
+});
+
+// ===== PUSH NOTIFICATIONS (future use) =====
+self.addEventListener('push', event => {
+  if (!event.data) return;
+  const data = event.data.json();
+  self.registration.showNotification(data.title || 'BENIM Trade', {
+    body: data.body || 'You have a new update',
+    icon: './icons/icon-192.png',
+    badge: './icons/icon-72.png',
+    data: { url: data.url || './' }
+  });
+});
+
+self.addEventListener('notificationclick', event => {
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data.url));
+  event.waitUntil(
+    clients.openWindow(event.notification.data?.url || './')
+  );
 });
